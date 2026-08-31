@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LB TENIS — Tablero Oficial</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            court: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#15803d',
+              600: '#166534',
+              700: '#14532d',
+              800: '#0f3f22',
+              900: '#092916',
+            },
+            tennis: {
+              ball: '#d4e157',
+              clay: '#c2410c',
+              gold: '#eab308'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .drop-active {
+      border-color: #166534 !important;
+      background-color: #f0fdf4 !important;
+    }
+    .tooltip-wrapper {
+      position: relative;
+      display: inline-flex;
+    }
+    .tooltip-content {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.2s;
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      z-index: 50;
+    }
+    .tooltip-wrapper:hover .tooltip-content {
+      visibility: visible;
+      opacity: 1;
+    }
+    @keyframes spin-slow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animate-spin-custom {
+      animation: spin-slow 1s linear infinite;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-emerald-600 selection:text-white">
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="bg-court-800 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
+        
+        <!-- Logo & Titulo -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-court-600 flex items-center justify-center shadow-inner border border-court-500 text-tennis-ball">
+            <svg class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 2a14.5 14.5 0 0 0 0 20"></path>
+              <path d="M2 12a14.5 14.5 0 0 0 20 0"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-black tracking-wider text-white flex items-center gap-2">
+              LB TENIS
+              <span class="text-xs uppercase bg-tennis-ball text-court-900 font-bold px-2 py-0.5 rounded-full tracking-normal">En Vivo</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-emerald-200" id="headerSubtitle">Cargando datos del torneo...</p>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          <div id="fileLoadedBadge" class="hidden sm:flex flex-col text-right text-xs text-emerald-200">
+            <span id="loadedFileName" class="font-medium text-white truncate max-w-[180px]">Google Sheets</span>
+            <span id="loadedFileDate" class="text-[10px] text-emerald-300">Sincronizado</span>
+          </div>
+          
+          <button id="btnSyncOnline" onclick="fetchOnlineSheet()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-court-600 hover:bg-court-500 rounded-lg shadow transition-all border border-court-400 cursor-pointer">
+            <svg id="syncIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span class="hidden sm:inline">Actualizar</span>
+          </button>
+
+          <button onclick="triggerFileInput()" title="Cargar archivo local de prueba" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-200 bg-court-700/80 hover:bg-court-600 rounded-lg border border-court-600 transition-all cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+            </svg>
+            <span class="hidden sm:inline">Subir .xlsx</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <input type="file" id="fileInput" accept=".xlsx" class="hidden" />
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+
+    <!-- Notificaciones -->
+    <div id="notificationArea" class="space-y-3"></div>
+
+    <!-- Spinner de Carga Inicial -->
+    <div id="loadingState" class="flex flex-col items-center justify-center py-20 text-center">
+      <div class="w-12 h-12 border-4 border-court-200 border-t-court-700 rounded-full animate-spin-custom mb-4"></div>
+      <h3 class="text-lg font-bold text-slate-800">Conectando con Google Sheets...</h3>
+      <p class="text-sm text-slate-500">Obteniendo los últimos resultados de la planilla</p>
+    </div>
+
+    <!-- Zona de Carga Manual / Fallback -->
+    <section id="uploadSection" class="hidden transition-all duration-300">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sm:p-12 text-center max-w-2xl mx-auto">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-court-50 text-court-700 flex items-center justify-center border border-court-100">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900 mb-2">Cargar planilla local</h2>
+        <p class="text-slate-600 text-sm mb-6 max-w-md mx-auto">
+          No se pudo sincronizar automáticamente con Google Sheets. Podés arrastrar tu archivo <strong>.xlsx</strong> aquí.
+        </p>
+        <div id="dropZone" onclick="triggerFileInput()" class="cursor-pointer border-2 border-dashed border-slate-300 hover:border-court-600 rounded-xl p-8 transition-colors bg-slate-50 hover:bg-court-50/50 flex flex-col items-center justify-center group">
+          <svg class="w-10 h-10 text-slate-400 group-hover:text-court-600 transition-colors mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+          </svg>
+          <span class="text-sm font-semibold text-slate-700 group-hover:text-court-700">Hacé clic para buscar o arrastrá el archivo aquí</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TABLERO PRINCIPAL -->
+    <div id="dashboardSection" class="hidden space-y-10">
+      
+      <!-- STRIP DE RESUMEN -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+          <span class="text-xs text-slate-500 font-medium block">Total Partidos</span>
+          <span class="text-2xl font-black text-slate-800" id="statTotalMatches">0</span>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+          <span class="text-xs text-emerald-600 font-semibold block">Jugados</span>
+          <span class="text-2xl font-black text-emerald-700" id="statPlayedMatches">0</span>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+          <span class="text-xs text-amber-600 font-semibold block">Pendientes</span>
+          <span class="text-2xl font-black text-amber-700" id="statPendingMatches">0</span>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+          <span class="text-xs text-slate-500 font-medium block">Puntos por partido</span>
+          <span class="text-2xl font-black text-court-700" id="statPtsWin">2 / 1</span>
+        </div>
+      </div>
+
+      <!-- TABLAS DE POSICIONES -->
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+              <span>🏆 Tablas de Posiciones</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500">Ordenado por Pts &gt; Partido entre sí &gt; Dif Sets &gt; Sets a Favor</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- TABLA CATEGORÍA A -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+            <div class="bg-gradient-to-r from-court-700 to-court-800 px-5 py-3.5 text-white flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="bg-white text-court-900 font-black text-xs px-2 py-0.5 rounded">CAT A</span>
+                <h3 class="font-bold text-base tracking-wide">Categoría A</h3>
+              </div>
+              <span class="text-xs text-emerald-200 font-medium" id="countPlayersA">5 Jugadores</span>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar flex-1">
+              <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-500 border-b border-slate-200 font-semibold uppercase text-[11px] tracking-wider">
+                    <th class="py-3 px-3 w-12 text-center">Pos</th>
+                    <th class="py-3 px-3">Jugador</th>
+                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Jugados">PJ</th>
+                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Ganados">PG</th>
+                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Perdidos">PP</th>
+                    <th class="py-3 px-2 text-center tabular-nums" title="Sets a Favor">SF</th>
+                    <th class="py-3 px-2 text-center tabular-nums" title="Sets en Contra">SC</th>
+                    <th class="py-3 px-2 text-center tabular-nums font-bold" title="Diferencia de Sets">Dif</th>
+                    <th class="py-3 px-3 text-center tabular-nums font-black text-slate-900 bg-slate-100" title="Puntos">Pts</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBodyA" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+              </table>
+            </div>
+
+            <div class="bg-slate-50 px-4 py-2.5 border-t border-slate-200 flex flex-wrap gap-3 text-[11px] text-slate-600">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 1°-2° Final</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> 4° Promoción</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> 5° Desciende</span>
+            </div>
+          </div>
+
+          <!-- TABLA CATEGORÍA B -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+            <div class="bg-gradient-to-r from-court-600 to-court-700 px-5 py-3.5 text-white flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="bg-emerald-300 text-court-950 font-black text-xs px-2 py-0.5 rounded">CAT B</span>
+                <h3 class="font-bold text-base tracking-wide">Categoría B</h3>
+              </div>
+              <span class="text-xs text-emerald-200 font-medium" id="countPlayersB">5 Jugadores</span>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar flex-1">
+              <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-500 border-b border-slate-200 font-semibold uppercase text-[11px] tracking-wider">
+                    <th class="py-3 px-3 w-12 text-center">Pos</th>
+                    <th class="py-3 px-3">Jugador</th>
+                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Jugados">PJ</th>
+                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Ganados">PG</th>
+                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Perdidos">PP</th>
+                    <th class="py-3 px-2 text-center tabular-nums" title="Sets a Favor">SF</th>
+                    <th class="py-3 px-2 text-center tabular-nums" title="Sets en Contra">SC</th>
+                    <th class="py-3 px-2 text-center tabular-nums font-bold" title="Diferencia de Sets">Dif</th>
+                    <th class="py-3 px-3 text-center tabular-nums font-black text-slate-900 bg-slate-100" title="Puntos">Pts</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBodyB" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+              </table>
+            </div>
+
+            <div class="bg-slate-50 px-4 py-2.5 border-t border-slate-200 flex flex-wrap gap-3 text-[11px] text-slate-600">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 1° Asciende directo</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> 2° Promoción</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- FIXTURE POR FECHAS -->
+      <section class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900">📅 Fixture & Resultados</h2>
+            <p class="text-xs sm:text-sm text-slate-500">Resultados registrados y partidos programados</p>
+          </div>
+
+          <div class="inline-flex p-1 bg-slate-200/80 rounded-xl overflow-x-auto max-w-full custom-scrollbar" id="roundFilterTabs">
+            <button onclick="setRoundFilter('all')" data-filter="all" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-sm">Todas</button>
+            <button onclick="setRoundFilter('1')" data-filter="1" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">F1</button>
+            <button onclick="setRoundFilter('2')" data-filter="2" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">F2</button>
+            <button onclick="setRoundFilter('3')" data-filter="3" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">F3</button>
+            <button onclick="setRoundFilter('4')" data-filter="4" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">F4</button>
+            <button onclick="setRoundFilter('5')" data-filter="5" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">F5</button>
+          </div>
+        </div>
+
+        <div id="fixtureContainer" class="space-y-6"></div>
+      </section>
+
+      <!-- DEFINICIONES -->
+      <section class="bg-gradient-to-br from-slate-900 via-slate-800 to-court-950 text-white rounded-2xl p-6 sm:p-8 shadow-md border border-slate-700">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-700/80 gap-2">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+              <span>🎯 Definiciones del Torneo</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-400">Cruces, ascensos y descensos proyectados según las posiciones actuales</p>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            ⚠️ Provisorio hasta finalizar la Fecha 5
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-emerald-500/30 relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Por el Título</span>
+                <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">CAT A</span>
+              </div>
+              <h4 class="text-base font-bold text-white mb-2">Gran Final</h4>
+              <div class="space-y-2 text-sm bg-slate-900/60 p-3 rounded-lg border border-slate-700/60">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-slate-400">1° A:</span>
+                  <span class="font-bold text-emerald-300 truncate max-w-[140px]" id="defFinal1">Por definir</span>
+                </div>
+                <div class="text-center text-xs font-bold text-slate-500">VS</div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-slate-400">2° A:</span>
+                  <span class="font-bold text-emerald-300 truncate max-w-[140px]" id="defFinal2">Por definir</span>
+                </div>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-3">El ganador se consagra campeón de la categoría.</p>
+          </div>
+
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-amber-500/30 relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Permanencia / Ascenso</span>
+                <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">A vs B</span>
+              </div>
+              <h4 class="text-base font-bold text-white mb-2">Promoción</h4>
+              <div class="space-y-2 text-sm bg-slate-900/60 p-3 rounded-lg border border-slate-700/60">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-slate-400">4° A:</span>
+                  <span class="font-bold text-amber-300 truncate max-w-[140px]" id="defPromoA">Por definir</span>
+                </div>
+                <div class="text-center text-xs font-bold text-slate-500">VS</div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-slate-400">2° B:</span>
+                  <span class="font-bold text-amber-300 truncate max-w-[140px]" id="defPromoB">Por definir</span>
+                </div>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-3">Partido único por una plaza en la Categoría A.</p>
+          </div>
+
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-emerald-500/30 relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Campeón B</span>
+                <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">CAT B</span>
+              </div>
+              <h4 class="text-base font-bold text-white mb-2">Ascenso Directo</h4>
+              <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60 text-center">
+                <span class="text-xs text-slate-400 block mb-1">1° de Categoría B</span>
+                <span class="text-base font-bold text-emerald-300 block truncate" id="defAscenso">Por definir</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-3">Jugará la próxima edición en Categoría A.</p>
+          </div>
+
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-rose-500/30 relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-rose-400">Último A</span>
+                <span class="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded font-bold">CAT A</span>
+              </div>
+              <h4 class="text-base font-bold text-white mb-2">Descenso Directo</h4>
+              <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60 text-center">
+                <span class="text-xs text-slate-400 block mb-1">5° de Categoría A</span>
+                <span class="text-base font-bold text-rose-300 block truncate" id="defDescenso">Por definir</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-3">Jugará la próxima edición en Categoría B.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- REGLAMENTO -->
+      <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <details class="group">
+          <summary class="flex items-center justify-between p-5 sm:p-6 cursor-pointer select-none font-bold text-slate-800 hover:text-court-700 transition-colors">
+            <span class="flex items-center gap-2 text-base sm:text-lg">
+              <svg class="w-5 h-5 text-court-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              Reglamento y Criterios de Clasificación
+            </span>
+            <span class="p-1 rounded-lg bg-slate-100 group-open:rotate-180 transition-transform text-slate-500">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </span>
+          </summary>
+          <div class="px-5 pb-6 sm:px-6 text-sm text-slate-600 border-t border-slate-100 pt-4 space-y-3 leading-relaxed">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <h5 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-court-600"></span> Formato de Partido
+                </h5>
+                <p>Se juega al <strong>mejor de 3 sets</strong>. Si el encuentro va 1-1 en sets, se define mediante un <strong>tercer set tradicional</strong> o un <strong>super tie break a 11 puntos</strong>, según acuerdo entre ambos jugadores.</p>
+              </div>
+              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <h5 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-court-600"></span> Criterio de Desempate
+                </h5>
+                <p>En caso de igualdad en puntos entre 2 jugadores, se define prioritariamente por el <strong>resultado del partido entre sí</strong>. En empates múltiples (3 o más jugadores), se aplica diferencia de sets.</p>
+              </div>
+              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <h5 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Definición Categoría A
+                </h5>
+                <p>• <strong>1° y 2°</strong> disputan la Gran Final.<br />
+                   • <strong>4°</strong> juega el partido de Promoción.<br />
+                   • <strong>5°</strong> desciende automáticamente a Categoría B.</p>
+              </div>
+              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <h5 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-tennis-clay"></span> Definición Categoría B
+                </h5>
+                <p>• <strong>1°</strong> asciende directamente a Categoría A.<br />
+                   • <strong>2°</strong> clasifica a la Promoción frente al 4° de Categoría A.</p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 mt-auto py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <p class="font-semibold text-slate-700">LB TENIS © 2026 — Plataforma de Gestión de Torneos</p>
+      <p class="mt-1 text-slate-400">Sincronización en vivo con Google Sheets</p>
+    </div>
+  </footer>
+
+  <!-- ==================== LOGICA JAVASCRIPT ==================== -->
+  <script>
+    // URL oficial de Google Sheets vinculada
+    const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRy7RWhzeeUv66oznEzwm8NBWjRRZv1iF_uIKO0kaeqAY8_QOtVpwB9V_vjH1TZhS78h7dHtRHoEM_3/pub?output=xlsx";
+
+    const AppState = {
+      config: {
+        ptsWin: 2,
+        ptsLoss: 1,
+        ptsFree: 0,
+        playersA: [],
+        playersB: [],
+        schedule: {}
+      },
+      matches: [],
+      standingsA: [],
+      standingsB: [],
+      activeRoundFilter: 'all',
+      sourceName: 'Google Sheets (En Vivo)'
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initDragAndDrop();
+      initFileInput();
+      fetchOnlineSheet();
+    });
+
+    async function fetchOnlineSheet() {
+      const syncIcon = document.getElementById('syncIcon');
+      if (syncIcon) syncIcon.classList.add('animate-spin-custom');
+
+      try {
+        // Cache-busting para obligar a descargar siempre la versión más reciente
+        const cacheBustUrl = GOOGLE_SHEET_URL + (GOOGLE_SHEET_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
+        const response = await fetch(cacheBustUrl);
+
+        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+
+        const arrayBuffer = await response.arrayBuffer();
+        parseWorkbookBuffer(arrayBuffer, "Google Sheets (En Vivo)");
+      } catch (err) {
+        console.error("Error al cargar Google Sheet:", err);
+        showNotification('warning', 'No se pudo conectar automáticamente con Google Sheets. Podés cargar el archivo .xlsx de forma manual.');
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('uploadSection').classList.remove('hidden');
+      } finally {
+        if (syncIcon) syncIcon.classList.remove('animate-spin-custom');
+      }
+    }
+
+    function triggerFileInput() {
+      document.getElementById('fileInput').click();
+    }
+
+    function initFileInput() {
+      const input = document.getElementById('fileInput');
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleLocalFile(file);
+        input.value = '';
+      });
+    }
+
+    function initDragAndDrop() {
+      const dropZone = document.getElementById('dropZone');
+      ['dragenter', 'dragover'].forEach(name => {
+        window.addEventListener(name, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (dropZone) dropZone.classList.add('drop-active');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(name => {
+        window.addEventListener(name, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (dropZone) dropZone.classList.remove('drop-active');
+        });
+      });
+
+      window.addEventListener('drop', (e) => {
+        const file = e.dataTransfer.files[0];
+        if (file) handleLocalFile(file);
+      });
+    }
+
+    function handleLocalFile(file) {
+      if (!file.name.toLowerCase().endsWith('.xlsx')) {
+        showNotification('error', 'El archivo debe ser un .xlsx válido.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        parseWorkbookBuffer(e.target.result, file.name);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function parseWorkbookBuffer(arrayBuffer, sourceName) {
+      clearNotifications();
+      try {
+        const data = new Uint8Array(arrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        const sheetNames = workbook.SheetNames;
+        const partidosKey = sheetNames.find(s => cleanKey(s) === 'partidos');
+        const configKey = sheetNames.find(s => cleanKey(s) === 'config');
+
+        if (!partidosKey || !configKey) {
+          showNotification('error', 'El archivo debe contener las pestañas "Partidos" y "Config".');
+          document.getElementById('loadingState').classList.add('hidden');
+          document.getElementById('uploadSection').classList.remove('hidden');
+          return;
+        }
+
+        AppState.sourceName = sourceName;
+        parseConfigSheet(workbook.Sheets[configKey]);
+        parsePartidosSheet(workbook.Sheets[partidosKey]);
+        calculateStandings();
+        renderDashboard();
+
+      } catch (err) {
+        console.error(err);
+        showNotification('error', 'Error al procesar la planilla: ' + err.message);
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('uploadSection').classList.remove('hidden');
+      }
+    }
+
+    function cleanString(val) {
+      if (val === undefined || val === null) return '';
+      return String(val).trim();
+    }
+
+    function cleanKey(val) {
+      return cleanString(val)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+    }
+
+    function parseConfigSheet(sheet) {
+      const getCell = (addr) => {
+        const c = sheet[addr];
+        return c ? c.v : '';
+      };
+
+      const ptsWin = Number(getCell('C5'));
+      const ptsLoss = Number(getCell('C6'));
+      const ptsFree = Number(getCell('C7'));
+
+      AppState.config.ptsWin = !isNaN(ptsWin) && ptsWin !== 0 ? ptsWin : 2;
+      AppState.config.ptsLoss = !isNaN(ptsLoss) ? ptsLoss : 1;
+      AppState.config.ptsFree = !isNaN(ptsFree) ? ptsFree : 0;
+
+      // Jugadores Categoría A: B11:B15
+      const playersA = [];
+      ['B11', 'B12', 'B13', 'B14', 'B15'].forEach(addr => {
+        const name = cleanString(getCell(addr));
+        if (name && name !== '0' && name.toLowerCase() !== 'libre') {
+          playersA.push(name);
+        }
+      });
+
+      // Jugadores Categoría B: C11:C15 (con fallback en B16:B20)
+      const playersB = [];
+      ['C11', 'C12', 'C13', 'C14', 'C15'].forEach(addr => {
+        const name = cleanString(getCell(addr));
+        if (name && name !== '0' && name.toLowerCase() !== 'libre') {
+          playersB.push(name);
+        }
+      });
+      if (playersB.length === 0) {
+        ['B16', 'B17', 'B18', 'B19', 'B20'].forEach(addr => {
+          const name = cleanString(getCell(addr));
+          if (name && name !== '0' && name.toLowerCase() !== 'libre') {
+            playersB.push(name);
+          }
+        });
+      }
+
+      // Calendario
+      const schedule = {};
+      const roundCells = [
+        { r: 'B20', p: 'C20' },
+        { r: 'B21', p: 'C21' },
+        { r: 'B22', p: 'C22' },
+        { r: 'B23', p: 'C23' },
+        { r: 'B24', p: 'C24' }
+      ];
+
+      roundCells.forEach(item => {
+        const roundNum = cleanString(getCell(item.r));
+        const periodText = cleanString(getCell(item.p));
+        if (roundNum) schedule[roundNum] = periodText;
+      });
+
+      AppState.config.playersA = playersA;
+      AppState.config.playersB = playersB;
+      AppState.config.schedule = schedule;
+    }
+
+    function parsePartidosSheet(sheet) {
+      const rawRows = XLSX.utils.sheet_to_json(sheet, { range: 1, defval: '' });
+      const matches = [];
+
+      rawRows.forEach((row) => {
+        const norm = {};
+        Object.keys(row).forEach(k => {
+          norm[cleanKey(k)] = row[k];
+        });
+
+        const fecha = norm['fecha'];
+        const rawCat = cleanString(norm['categoria']);
+        let cat = '';
+        if (rawCat.toLowerCase().includes('b')) cat = 'B';
+        else if (rawCat.toLowerCase().includes('a')) cat = 'A';
+
+        const j1 = cleanString(norm['jugador 1']);
+        const j2 = cleanString(norm['jugador 2']);
+
+        if (!fecha && !cat && !j1) return;
+
+        matches.push({
+          fecha: Number(fecha) || fecha,
+          periodo: cleanString(norm['periodo']) || AppState.config.schedule[fecha] || `Fecha ${fecha}`,
+          categoria: cat,
+          jugador1: j1,
+          jugador2: j2,
+          set1J1: norm['set 1 j1'],
+          set1J2: norm['set 1 j2'],
+          set2J1: norm['set 2 j1'],
+          set2J2: norm['set 2 j2'],
+          definicion: cleanString(norm['definicion']),
+          defJ1: norm['def j1'],
+          defJ2: norm['def j2'],
+          setsJ1: Number(norm['sets j1']) || 0,
+          setsJ2: Number(norm['sets j2']) || 0,
+          resultado: cleanString(norm['resultado']),
+          ganador: cleanString(norm['ganador']),
+          estado: cleanString(norm['estado']) || 'Pendiente'
+        });
+      });
+
+      AppState.matches = matches;
+    }
+
+    function calculateStandings() {
+      AppState.standingsA = calculateCategoryStandings('A', AppState.config.playersA);
+      AppState.standingsB = calculateCategoryStandings('B', AppState.config.playersB);
+    }
+
+    function calculateCategoryStandings(category, roster) {
+      const catMatches = AppState.matches.filter(m => m.categoria === category);
+
+      let players = roster && roster.length > 0 ? [...roster] : [];
+      if (players.length === 0) {
+        const set = new Set();
+        catMatches.forEach(m => {
+          if (m.jugador1 && m.jugador1.toLowerCase() !== 'libre') set.add(m.jugador1);
+          if (m.jugador2 && m.jugador2.toLowerCase() !== 'libre') set.add(m.jugador2);
+        });
+        players = Array.from(set);
+      }
+
+      const statsMap = {};
+      players.forEach(pName => {
+        statsMap[pName.toLowerCase()] = {
+          name: pName,
+          category: category,
+          pj: 0,
+          pg: 0,
+          pp: 0,
+          sf: 0,
+          sc: 0,
+          dif: 0,
+          pts: 0,
+          hasTieWarning: false,
+          tieWarningText: ''
+        };
+      });
+
+      catMatches.forEach(m => {
+        if (cleanKey(m.estado) !== 'jugado') return;
+
+        const k1 = cleanKey(m.jugador1);
+        const k2 = cleanKey(m.jugador2);
+        const winnerKey = cleanKey(m.ganador);
+
+        if (statsMap[k1]) {
+          statsMap[k1].pj += 1;
+          statsMap[k1].sf += m.setsJ1;
+          statsMap[k1].sc += m.setsJ2;
+          if (winnerKey === k1) statsMap[k1].pg += 1;
+          else statsMap[k1].pp += 1;
+        }
+
+        if (statsMap[k2]) {
+          statsMap[k2].pj += 1;
+          statsMap[k2].sf += m.setsJ2;
+          statsMap[k2].sc += m.setsJ1;
+          if (winnerKey === k2) statsMap[k2].pg += 1;
+          else statsMap[k2].pp += 1;
+        }
+      });
+
+      const list = Object.values(statsMap).map(player => {
+        player.dif = player.sf - player.sc;
+        player.pts = (player.pg * AppState.config.ptsWin) + (player.pp * AppState.config.ptsLoss);
+        return player;
+      });
+
+      // Agrupamiento por puntos para desempates reglamentarios
+      const ptsGroups = {};
+      list.forEach(p => {
+        if (!ptsGroups[p.pts]) ptsGroups[p.pts] = [];
+        ptsGroups[p.pts].push(p);
+      });
+
+      const sortedPts = Object.keys(ptsGroups).map(Number).sort((a, b) => b - a);
+      let finalSortedList = [];
+
+      sortedPts.forEach(ptsVal => {
+        const group = ptsGroups[ptsVal];
+
+        if (group.length === 1) {
+          finalSortedList.push(group[0]);
+        } else if (group.length === 2) {
+          const [pA, pB] = group;
+          const directMatch = catMatches.find(m => 
+            cleanKey(m.estado) === 'jugado' &&
+            ((cleanKey(m.jugador1) === cleanKey(pA.name) && cleanKey(m.jugador2) === cleanKey(pB.name)) ||
+             (cleanKey(m.jugador2) === cleanKey(pA.name) && cleanKey(m.jugador1) === cleanKey(pB.name)))
+          );
+
+          if (directMatch && directMatch.ganador) {
+            const w = cleanKey(directMatch.ganador);
+            if (w === cleanKey(pA.name)) {
+              finalSortedList.push(pA, pB);
+            } else if (w === cleanKey(pB.name)) {
+              finalSortedList.push(pB, pA);
+            } else {
+              group.sort((a, b) => (b.dif - a.dif) || (b.sf - a.sf));
+              group.forEach(g => {
+                g.hasTieWarning = true;
+                g.tieWarningText = 'Empate en puntos — verificar definición por partido entre sí';
+              });
+              finalSortedList.push(...group);
+            }
+          } else {
+            group.sort((a, b) => (b.dif - a.dif) || (b.sf - a.sf));
+            group.forEach(g => {
+              g.hasTieWarning = true;
+              g.tieWarningText = 'Empate en puntos — verificar definición por partido entre sí';
+            });
+            finalSortedList.push(...group);
+          }
+        } else {
+          group.sort((a, b) => (b.dif - a.dif) || (b.sf - a.sf));
+          group.forEach(g => {
+            g.hasTieWarning = true;
+            g.tieWarningText = 'Empate en puntos — verificar definición por partido entre sí';
+          });
+          finalSortedList.push(...group);
+        }
+      });
+
+      return finalSortedList;
+    }
+
+    function renderDashboard() {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('uploadSection').classList.add('hidden');
+      document.getElementById('dashboardSection').classList.remove('hidden');
+
+      const fileBadge = document.getElementById('fileLoadedBadge');
+      fileBadge.classList.remove('hidden');
+      fileBadge.classList.add('flex');
+      document.getElementById('loadedFileName').textContent = AppState.sourceName;
+      
+      const now = new Date();
+      document.getElementById('loadedFileDate').textContent = `Act: ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} hs`;
+      document.getElementById('headerSubtitle').textContent = `Torneo en curso • ${AppState.matches.length} partidos cargados`;
+
+      const totalMatches = AppState.matches.filter(m => m.jugador2 && cleanKey(m.jugador2) !== 'libre').length;
+      const playedMatches = AppState.matches.filter(m => cleanKey(m.estado) === 'jugado').length;
+      const pendingMatches = AppState.matches.filter(m => cleanKey(m.estado) === 'pendiente' || cleanKey(m.estado) === 'falta definicion').length;
+
+      document.getElementById('statTotalMatches').textContent = totalMatches;
+      document.getElementById('statPlayedMatches').textContent = playedMatches;
+      document.getElementById('statPendingMatches').textContent = pendingMatches;
+      document.getElementById('statPtsWin').textContent = `${AppState.config.ptsWin} / ${AppState.config.ptsLoss} pts`;
+
+      document.getElementById('countPlayersA').textContent = `${AppState.standingsA.length} Jugadores`;
+      document.getElementById('countPlayersB').textContent = `${AppState.standingsB.length} Jugadores`;
+
+      renderStandingsTable('tableBodyA', AppState.standingsA, 'A');
+      renderStandingsTable('tableBodyB', AppState.standingsB, 'B');
+      renderFixture();
+      renderDefinitions();
+    }
+
+    function renderStandingsTable(tbodyId, standings, category) {
+      const tbody = document.getElementById(tbodyId);
+      tbody.innerHTML = '';
+
+      if (standings.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">Sin datos de Categoría ${category}</td></tr>`;
+        return;
+      }
+
+      standings.forEach((player, index) => {
+        const pos = index + 1;
+        const tr = document.createElement('tr');
+
+        let borderClass = 'border-transparent';
+        let badgeHtml = '';
+
+        if (category === 'A') {
+          if (pos === 1 || pos === 2) {
+            borderClass = 'border-emerald-500 bg-emerald-50/20';
+            badgeHtml = `<span class="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">FINAL</span>`;
+          } else if (pos === 4) {
+            borderClass = 'border-amber-500 bg-amber-50/20';
+            badgeHtml = `<span class="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">PROMOCIÓN</span>`;
+          } else if (pos === 5) {
+            borderClass = 'border-rose-500 bg-rose-50/20';
+            badgeHtml = `<span class="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300">DESCIENDE</span>`;
+          }
+        } else if (category === 'B') {
+          if (pos === 1) {
+            borderClass = 'border-emerald-500 bg-emerald-50/20';
+            badgeHtml = `<span class="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">ASCIENDE</span>`;
+          } else if (pos === 2) {
+            borderClass = 'border-amber-500 bg-amber-50/20';
+            badgeHtml = `<span class="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">PROMOCIÓN</span>`;
+          }
+        }
+
+        tr.className = `hover:bg-slate-50 transition-colors border-l-4 ${borderClass}`;
+
+        let warningHtml = '';
+        if (player.hasTieWarning) {
+          warningHtml = `
+            <span class="tooltip-wrapper cursor-help text-amber-600 ml-1.5">
+              <svg class="w-4 h-4 inline" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+              </svg>
+              <span class="tooltip-content bg-slate-900 text-amber-200 text-[11px] font-normal py-1.5 px-3 rounded shadow-lg border border-slate-700">
+                ${player.tieWarningText}
+              </span>
+            </span>
+          `;
+        }
+
+        tr.innerHTML = `
+          <td class="py-3 px-3 text-center font-bold text-slate-800">${pos}°</td>
+          <td class="py-3 px-3">
+            <div class="flex items-center flex-wrap gap-1">
+              <span class="font-bold text-slate-900">${escapeHtml(player.name)}</span>
+              ${badgeHtml}
+              ${warningHtml}
+            </div>
+          </td>
+          <td class="py-3 px-2 text-center tabular-nums text-slate-600">${player.pj}</td>
+          <td class="py-3 px-2 text-center tabular-nums text-emerald-700 font-semibold">${player.pg}</td>
+          <td class="py-3 px-2 text-center tabular-nums text-slate-500">${player.pp}</td>
+          <td class="py-3 px-2 text-center tabular-nums text-slate-600">${player.sf}</td>
+          <td class="py-3 px-2 text-center tabular-nums text-slate-600">${player.sc}</td>
+          <td class="py-3 px-2 text-center tabular-nums font-bold ${player.dif > 0 ? 'text-emerald-700' : player.dif < 0 ? 'text-rose-700' : 'text-slate-600'}">
+            ${player.dif > 0 ? '+' + player.dif : player.dif}
+          </td>
+          <td class="py-3 px-3 text-center tabular-nums font-black text-slate-900 bg-slate-100/70 text-sm">
+            ${player.pts}
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function setRoundFilter(filter) {
+      AppState.activeRoundFilter = filter;
+      document.querySelectorAll('.filter-tab').forEach(btn => {
+        if (btn.dataset.filter === filter) {
+          btn.className = 'filter-tab px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-sm';
+        } else {
+          btn.className = 'filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all';
+        }
+      });
+      renderFixture();
+    }
+
+    function renderFixture() {
+      const container = document.getElementById('fixtureContainer');
+      container.innerHTML = '';
+
+      const allRounds = [1, 2, 3, 4, 5];
+      const selectedRounds = AppState.activeRoundFilter === 'all' 
+        ? allRounds 
+        : [Number(AppState.activeRoundFilter)];
+
+      selectedRounds.forEach(roundNum => {
+        const roundMatches = AppState.matches.filter(m => Number(m.fecha) === roundNum);
+        const periodText = AppState.config.schedule[roundNum] || 
+                           (roundMatches[0] && roundMatches[0].periodo ? roundMatches[0].periodo : '');
+
+        const roundSection = document.createElement('div');
+        roundSection.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden';
+
+        const matchesCatA = roundMatches.filter(m => m.categoria === 'A');
+        const matchesCatB = roundMatches.filter(m => m.categoria === 'B');
+
+        roundSection.innerHTML = `
+          <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-court-600"></span>
+              <h3 class="font-bold text-slate-900 text-base">Fecha ${roundNum}</h3>
+              ${periodText ? `<span class="text-xs text-slate-500 font-medium">— ${escapeHtml(periodText)}</span>` : ''}
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700">
+              ${roundMatches.filter(m => cleanKey(m.estado) === 'jugado').length}/${roundMatches.filter(m => cleanKey(m.estado) !== 'libre').length} Jugados
+            </span>
+          </div>
+
+          <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+                <span class="text-xs font-bold text-court-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-court-700"></span> Categoría A
+                </span>
+              </div>
+              <div class="space-y-2.5">
+                ${matchesCatA.length > 0 ? matchesCatA.map(m => createMatchCard(m)).join('') : '<p class="text-xs text-slate-400 py-3 text-center">Sin partidos registrados</p>'}
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+                <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Categoría B
+                </span>
+              </div>
+              <div class="space-y-2.5">
+                ${matchesCatB.length > 0 ? matchesCatB.map(m => createMatchCard(m)).join('') : '<p class="text-xs text-slate-400 py-3 text-center">Sin partidos registrados</p>'}
+              </div>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(roundSection);
+      });
+    }
+
+    function createMatchCard(m) {
+      const isLibre = cleanKey(m.estado) === 'libre' || cleanKey(m.jugador2) === 'libre';
+      const isJugado = cleanKey(m.estado) === 'jugado';
+      const isFaltaDef = cleanKey(m.estado) === 'falta definicion';
+
+      if (isLibre) {
+        return `
+          <div class="p-3 bg-slate-50/80 rounded-xl border border-dashed border-slate-200 flex items-center justify-between text-xs text-slate-500">
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-slate-600">${escapeHtml(m.jugador1)}</span>
+            </div>
+            <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-slate-200/80 text-slate-600 tracking-wider">Fecha Libre</span>
+          </div>
+        `;
+      }
+
+      if (isJugado) {
+        const isJ1Winner = cleanKey(m.ganador) === cleanKey(m.jugador1);
+        const isJ2Winner = cleanKey(m.ganador) === cleanKey(m.jugador2);
+
+        let defBadge = '';
+        if (m.definicion) {
+          const defText = cleanKey(m.definicion).includes('tie') ? 'Tie break 11' : '3° Set';
+          defBadge = `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">${defText}</span>`;
+        }
+
+        return `
+          <div class="p-3.5 bg-white rounded-xl border border-slate-200 hover:border-court-400 transition-all shadow-xs flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-emerald-700 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Jugado
+              </span>
+              ${defBadge}
+            </div>
+
+            <div class="flex items-center justify-between gap-3 text-sm">
+              <div class="flex-1 space-y-1">
+                <div class="flex items-center gap-1.5 ${isJ1Winner ? 'font-black text-slate-900' : 'text-slate-600 font-medium'}">
+                  ${isJ1Winner ? '<span class="text-emerald-600 text-xs">▶</span>' : '<span class="w-2.5 inline-block"></span>'}
+                  <span class="truncate">${escapeHtml(m.jugador1)}</span>
+                </div>
+                <div class="flex items-center gap-1.5 ${isJ2Winner ? 'font-black text-slate-900' : 'text-slate-600 font-medium'}">
+                  ${isJ2Winner ? '<span class="text-emerald-600 text-xs">▶</span>' : '<span class="w-2.5 inline-block"></span>'}
+                  <span class="truncate">${escapeHtml(m.jugador2)}</span>
+                </div>
+              </div>
+
+              <div class="bg-slate-100/90 px-3 py-1.5 rounded-lg text-right font-mono font-bold text-xs sm:text-sm text-slate-800 whitespace-nowrap shadow-inner border border-slate-200">
+                ${escapeHtml(m.resultado || `${m.setsJ1} - ${m.setsJ2}`)}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (isFaltaDef) {
+        return `
+          <div class="p-3.5 bg-amber-50/50 rounded-xl border border-amber-200 shadow-xs flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-amber-700 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Falta definir
+              </span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-200 text-amber-900">1-1 en Sets</span>
+            </div>
+
+            <div class="flex items-center justify-between gap-3 text-sm">
+              <div class="flex-1 space-y-1 font-semibold text-slate-700">
+                <div class="truncate">${escapeHtml(m.jugador1)}</div>
+                <div class="truncate">${escapeHtml(m.jugador2)}</div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs font-mono font-bold bg-amber-100 text-amber-900 px-2 py-1 rounded border border-amber-300">
+                  ${m.set1J1}-${m.set1J2} ${m.set2J1}-${m.set2J2}
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200 flex items-center justify-between gap-3 text-xs sm:text-sm">
+          <div class="flex-1 space-y-1 font-medium text-slate-700">
+            <div class="truncate">${escapeHtml(m.jugador1)}</div>
+            <div class="truncate text-slate-500">${escapeHtml(m.jugador2)}</div>
+          </div>
+          <div class="text-right">
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-200/80 text-slate-600">
+              Por jugar
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDefinitions() {
+      const posA = AppState.standingsA;
+      const posB = AppState.standingsB;
+
+      document.getElementById('defFinal1').textContent = posA[0] ? `1° ${posA[0].name}` : 'Por definir';
+      document.getElementById('defFinal2').textContent = posA[1] ? `2° ${posA[1].name}` : 'Por definir';
+      document.getElementById('defPromoA').textContent = posA[3] ? `4° ${posA[3].name}` : 'Por definir';
+      document.getElementById('defPromoB').textContent = posB[1] ? `2° ${posB[1].name}` : 'Por definir';
+      document.getElementById('defAscenso').textContent = posB[0] ? posB[0].name : 'Por definir';
+      document.getElementById('defDescenso').textContent = posA[4] ? posA[4].name : 'Por definir';
+    }
+
+    function showNotification(type, message) {
+      const container = document.getElementById('notificationArea');
+      const isError = type === 'error';
+      const isWarning = type === 'warning';
+      const el = document.createElement('div');
+      el.className = `p-4 rounded-xl border flex items-start gap-3 shadow-sm ${
+        isError ? 'bg-rose-50 border-rose-200 text-rose-800' :
+        isWarning ? 'bg-amber-50 border-amber-200 text-amber-800' :
+        'bg-emerald-50 border-emerald-200 text-emerald-800'
+      }`;
+      el.innerHTML = `
+        <div class="mt-0.5 flex-shrink-0">${isError ? '❌' : isWarning ? '⚠️' : '✅'}</div>
+        <div class="flex-1 text-sm font-medium">${message}</div>
+        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600">✕</button>
+      `;
+      container.appendChild(el);
+    }
+
+    function clearNotifications() {
+      document.getElementById('notificationArea').innerHTML = '';
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
