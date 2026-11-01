@@ -36,50 +36,19 @@
     }
   </script>
   <style>
-    .tabular-nums {
-      font-variant-numeric: tabular-nums;
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-      height: 6px;
-      width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 4px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-    .drop-active {
-      border-color: #166534 !important;
-      background-color: #f0fdf4 !important;
-    }
-    .tooltip-wrapper {
-      position: relative;
-      display: inline-flex;
-    }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .tooltip-wrapper { position: relative; display: inline-flex; }
     .tooltip-content {
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.2s;
-      position: absolute;
-      bottom: 125%;
-      left: 50%;
-      transform: translateX(-50%);
-      white-space: nowrap;
-      z-index: 50;
+      visibility: hidden; opacity: 0; transition: opacity 0.2s;
+      position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+      white-space: nowrap; z-index: 50;
     }
-    .tooltip-wrapper:hover .tooltip-content {
-      visibility: visible;
-      opacity: 1;
-    }
-    @keyframes spin-slow {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .animate-spin-custom {
-      animation: spin-slow 1s linear infinite;
-    }
+    .tooltip-wrapper:hover .tooltip-content { visibility: visible; opacity: 1; }
+    @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .animate-spin-custom { animation: spin-slow 1s linear infinite; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-emerald-600 selection:text-white">
@@ -87,7 +56,7 @@
   <!-- ==================== HEADER ==================== -->
   <header class="bg-court-800 text-white shadow-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16 sm:h-20">
+      <div class="flex items-center justify-between h-16 sm:h-20 flex-wrap gap-2">
         
         <!-- Logo & Titulo -->
         <div class="flex items-center space-x-3">
@@ -103,73 +72,62 @@
               LB TENIS
               <span class="text-xs uppercase bg-tennis-ball text-court-900 font-bold px-2 py-0.5 rounded-full tracking-normal">En Vivo</span>
             </h1>
-            <p class="text-xs sm:text-sm text-emerald-200" id="headerSubtitle">Cargando datos del torneo...</p>
+            <p class="text-xs sm:text-sm text-emerald-200" id="headerSubtitle">Conectando a la base de datos...</p>
           </div>
         </div>
 
-        <!-- Acciones -->
-        <div class="flex items-center space-x-2 sm:space-x-3">
-          <div id="fileLoadedBadge" class="hidden sm:flex flex-col text-right text-xs text-emerald-200">
-            <span id="loadedFileName" class="font-medium text-white truncate max-w-[180px]">Google Sheets</span>
-            <span id="loadedFileDate" class="text-[10px] text-emerald-300">Sincronizado</span>
-          </div>
+        <!-- Controles: Fotos, Selector de Edición, Refrescar -->
+        <div class="flex items-center space-x-2 sm:space-x-3 ml-auto">
           
-          <button id="btnSyncOnline" onclick="fetchOnlineSheet()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-court-600 hover:bg-court-500 rounded-lg shadow transition-all border border-court-400 cursor-pointer">
-            <svg id="syncIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Botón Galería Drive -->
+          <a id="btnDrivePhotos" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-court-900 bg-tennis-ball hover:bg-yellow-300 rounded-lg shadow transition-all border border-transparent">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <span class="hidden sm:inline">Fotos del Torneo</span>
+          </a>
+
+          <!-- Selector de Edición -->
+          <select id="editionSelector" onchange="changeEdition(this.value)" class="hidden bg-court-700 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg border border-court-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer">
+          </select>
+          
+          <!-- Botón Sincronizar -->
+          <button id="btnSyncOnline" onclick="fetchOnlineSheet()" title="Recargar datos" class="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:px-3 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-court-600 hover:bg-court-500 rounded-lg shadow transition-all border border-court-400 cursor-pointer">
+            <svg id="syncIcon" class="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
             <span class="hidden sm:inline">Actualizar</span>
           </button>
 
-          <button onclick="triggerFileInput()" title="Cargar archivo local de prueba" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-200 bg-court-700/80 hover:bg-court-600 rounded-lg border border-court-600 transition-all cursor-pointer">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-            </svg>
-            <span class="hidden sm:inline">Subir .xlsx</span>
-          </button>
         </div>
       </div>
     </div>
   </header>
 
-  <input type="file" id="fileInput" accept=".xlsx" class="hidden" />
-
   <!-- ==================== MAIN CONTENT ==================== -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
 
-    <!-- Notificaciones -->
     <div id="notificationArea" class="space-y-3"></div>
 
     <!-- Spinner de Carga Inicial -->
     <div id="loadingState" class="flex flex-col items-center justify-center py-20 text-center">
       <div class="w-12 h-12 border-4 border-court-200 border-t-court-700 rounded-full animate-spin-custom mb-4"></div>
-      <h3 class="text-lg font-bold text-slate-800">Conectando con Google Sheets...</h3>
-      <p class="text-sm text-slate-500">Obteniendo los últimos resultados de la planilla</p>
+      <h3 class="text-lg font-bold text-slate-800">Sincronizando con Google Sheets...</h3>
+      <p class="text-sm text-slate-500">Obteniendo resultados y posiciones en vivo</p>
     </div>
 
-    <!-- Zona de Carga Manual / Fallback -->
-    <section id="uploadSection" class="hidden transition-all duration-300">
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sm:p-12 text-center max-w-2xl mx-auto">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-court-50 text-court-700 flex items-center justify-center border border-court-100">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
-        </div>
-        <h2 class="text-2xl font-bold text-slate-900 mb-2">Cargar planilla local</h2>
-        <p class="text-slate-600 text-sm mb-6 max-w-md mx-auto">
-          No se pudo sincronizar automáticamente con Google Sheets. Podés arrastrar tu archivo <strong>.xlsx</strong> aquí.
-        </p>
-        <div id="dropZone" onclick="triggerFileInput()" class="cursor-pointer border-2 border-dashed border-slate-300 hover:border-court-600 rounded-xl p-8 transition-colors bg-slate-50 hover:bg-court-50/50 flex flex-col items-center justify-center group">
-          <svg class="w-10 h-10 text-slate-400 group-hover:text-court-600 transition-colors mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-          </svg>
-          <span class="text-sm font-semibold text-slate-700 group-hover:text-court-700">Hacé clic para buscar o arrastrá el archivo aquí</span>
-        </div>
+    <!-- Mensaje de Error (Si falla la carga) -->
+    <div id="errorState" class="hidden flex flex-col items-center justify-center py-20 text-center">
+      <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mb-4">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
       </div>
-    </section>
+      <h3 class="text-lg font-bold text-slate-800">Error de conexión</h3>
+      <p class="text-sm text-slate-500 mb-4">No se pudo acceder a la base de datos del torneo.</p>
+      <button onclick="fetchOnlineSheet()" class="px-4 py-2 bg-court-600 text-white rounded-lg font-semibold shadow hover:bg-court-700">Reintentar conexión</button>
+    </div>
 
     <!-- TABLERO PRINCIPAL -->
-    <div id="dashboardSection" class="hidden space-y-10">
+    <div id="dashboardSection" class="hidden space-y-10 animate-fade-in">
       
       <!-- STRIP DE RESUMEN -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -186,8 +144,8 @@
           <span class="text-2xl font-black text-amber-700" id="statPendingMatches">0</span>
         </div>
         <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-          <span class="text-xs text-slate-500 font-medium block">Puntos por partido</span>
-          <span class="text-2xl font-black text-court-700" id="statPtsWin">2 / 1</span>
+          <span class="text-xs text-slate-500 font-medium block">Puntos (G / P)</span>
+          <span class="text-2xl font-black text-court-700" id="statPtsWin">1 / 0</span>
         </div>
       </div>
 
@@ -204,75 +162,66 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-          <!-- TABLA CATEGORÍA A -->
+          <!-- TABLA 1 (Cat A o Grupo 1) -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
             <div class="bg-gradient-to-r from-court-700 to-court-800 px-5 py-3.5 text-white flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="bg-white text-court-900 font-black text-xs px-2 py-0.5 rounded">CAT A</span>
-                <h3 class="font-bold text-base tracking-wide">Categoría A</h3>
-              </div>
-              <span class="text-xs text-emerald-200 font-medium" id="countPlayersA">5 Jugadores</span>
+              <h3 class="font-bold text-base tracking-wide flex items-center gap-2">
+                <span class="bg-white text-court-900 font-black text-xs px-2 py-0.5 rounded" id="labelTable1">CAT A</span>
+                <span id="titleTable1">Categoría A</span>
+              </h3>
+              <span class="text-xs text-emerald-200 font-medium" id="countPlayers1">0 Jugadores</span>
             </div>
-
             <div class="overflow-x-auto custom-scrollbar flex-1">
               <table class="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr class="bg-slate-50 text-slate-500 border-b border-slate-200 font-semibold uppercase text-[11px] tracking-wider">
                     <th class="py-3 px-3 w-12 text-center">Pos</th>
                     <th class="py-3 px-3">Jugador</th>
-                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Jugados">PJ</th>
-                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Ganados">PG</th>
-                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Perdidos">PP</th>
-                    <th class="py-3 px-2 text-center tabular-nums" title="Sets a Favor">SF</th>
-                    <th class="py-3 px-2 text-center tabular-nums" title="Sets en Contra">SC</th>
-                    <th class="py-3 px-2 text-center tabular-nums font-bold" title="Diferencia de Sets">Dif</th>
-                    <th class="py-3 px-3 text-center tabular-nums font-black text-slate-900 bg-slate-100" title="Puntos">Pts</th>
+                    <th class="py-3 px-2 text-center tabular-nums">PJ</th>
+                    <th class="py-3 px-2 text-center tabular-nums">PG</th>
+                    <th class="py-3 px-2 text-center tabular-nums">PP</th>
+                    <th class="py-3 px-2 text-center tabular-nums">SF</th>
+                    <th class="py-3 px-2 text-center tabular-nums">SC</th>
+                    <th class="py-3 px-2 text-center tabular-nums font-bold">Dif</th>
+                    <th class="py-3 px-3 text-center tabular-nums font-black text-slate-900 bg-slate-100">Pts</th>
                   </tr>
                 </thead>
-                <tbody id="tableBodyA" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+                <tbody id="tableBody1" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
               </table>
             </div>
-
-            <div class="bg-slate-50 px-4 py-2.5 border-t border-slate-200 flex flex-wrap gap-3 text-[11px] text-slate-600">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 1°-2° Final</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> 4° Promoción</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> 5° Desciende</span>
-            </div>
+            <!-- Leyenda dinámica 1 -->
+            <div id="legendTable1" class="bg-slate-50 px-4 py-2.5 border-t border-slate-200 flex flex-wrap gap-3 text-[11px] text-slate-600"></div>
           </div>
 
-          <!-- TABLA CATEGORÍA B -->
+          <!-- TABLA 2 (Cat B o Grupo 2) -->
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
             <div class="bg-gradient-to-r from-court-600 to-court-700 px-5 py-3.5 text-white flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="bg-emerald-300 text-court-950 font-black text-xs px-2 py-0.5 rounded">CAT B</span>
-                <h3 class="font-bold text-base tracking-wide">Categoría B</h3>
-              </div>
-              <span class="text-xs text-emerald-200 font-medium" id="countPlayersB">5 Jugadores</span>
+              <h3 class="font-bold text-base tracking-wide flex items-center gap-2">
+                <span class="bg-emerald-300 text-court-950 font-black text-xs px-2 py-0.5 rounded" id="labelTable2">CAT B</span>
+                <span id="titleTable2">Categoría B</span>
+              </h3>
+              <span class="text-xs text-emerald-200 font-medium" id="countPlayers2">0 Jugadores</span>
             </div>
-
             <div class="overflow-x-auto custom-scrollbar flex-1">
               <table class="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr class="bg-slate-50 text-slate-500 border-b border-slate-200 font-semibold uppercase text-[11px] tracking-wider">
                     <th class="py-3 px-3 w-12 text-center">Pos</th>
                     <th class="py-3 px-3">Jugador</th>
-                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Jugados">PJ</th>
-                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Ganados">PG</th>
-                    <th class="py-3 px-2 text-center tabular-nums" title="Partidos Perdidos">PP</th>
-                    <th class="py-3 px-2 text-center tabular-nums" title="Sets a Favor">SF</th>
-                    <th class="py-3 px-2 text-center tabular-nums" title="Sets en Contra">SC</th>
-                    <th class="py-3 px-2 text-center tabular-nums font-bold" title="Diferencia de Sets">Dif</th>
-                    <th class="py-3 px-3 text-center tabular-nums font-black text-slate-900 bg-slate-100" title="Puntos">Pts</th>
+                    <th class="py-3 px-2 text-center tabular-nums">PJ</th>
+                    <th class="py-3 px-2 text-center tabular-nums">PG</th>
+                    <th class="py-3 px-2 text-center tabular-nums">PP</th>
+                    <th class="py-3 px-2 text-center tabular-nums">SF</th>
+                    <th class="py-3 px-2 text-center tabular-nums">SC</th>
+                    <th class="py-3 px-2 text-center tabular-nums font-bold">Dif</th>
+                    <th class="py-3 px-3 text-center tabular-nums font-black text-slate-900 bg-slate-100">Pts</th>
                   </tr>
                 </thead>
-                <tbody id="tableBodyB" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+                <tbody id="tableBody2" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
               </table>
             </div>
-
-            <div class="bg-slate-50 px-4 py-2.5 border-t border-slate-200 flex flex-wrap gap-3 text-[11px] text-slate-600">
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 1° Asciende directo</span>
-              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> 2° Promoción</span>
-            </div>
+            <!-- Leyenda dinámica 2 -->
+            <div id="legendTable2" class="bg-slate-50 px-4 py-2.5 border-t border-slate-200 flex flex-wrap gap-3 text-[11px] text-slate-600"></div>
           </div>
 
         </div>
@@ -283,499 +232,312 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 class="text-xl sm:text-2xl font-bold text-slate-900">📅 Fixture & Resultados</h2>
-            <p class="text-xs sm:text-sm text-slate-500">Resultados registrados y partidos programados</p>
+            <p class="text-xs sm:text-sm text-slate-500">Fase regular y cruces definitorios</p>
           </div>
 
+          <!-- Filtros Dinámicos -->
           <div class="inline-flex p-1 bg-slate-200/80 rounded-xl overflow-x-auto max-w-full custom-scrollbar" id="roundFilterTabs">
-            <button onclick="setRoundFilter('all')" data-filter="all" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-sm">Todas</button>
-            <button onclick="setRoundFilter('1')" data-filter="1" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">F1</button>
-            <button onclick="setRoundFilter('2')" data-filter="2" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">F2</button>
-            <button onclick="setRoundFilter('3')" data-filter="3" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">F3</button>
-            <button onclick="setRoundFilter('4')" data-filter="4" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">F4</button>
-            <button onclick="setRoundFilter('5')" data-filter="5" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all">F5</button>
           </div>
         </div>
 
         <div id="fixtureContainer" class="space-y-6"></div>
       </section>
 
-      <!-- DEFINICIONES -->
+      <!-- DEFINICIONES DINÁMICAS -->
       <section class="bg-gradient-to-br from-slate-900 via-slate-800 to-court-950 text-white rounded-2xl p-6 sm:p-8 shadow-md border border-slate-700">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-700/80 gap-2">
           <div>
             <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              <span>🎯 Definiciones del Torneo</span>
+              <span>🎯 Cuadro de Definiciones & Playoffs</span>
             </h2>
-            <p class="text-xs sm:text-sm text-slate-400">Cruces, ascensos y descensos proyectados según las posiciones actuales</p>
+            <p class="text-xs sm:text-sm text-slate-400">Se actualiza con las posiciones o con los resultados de las finales cargadas</p>
           </div>
-          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-            ⚠️ Provisorio hasta finalizar la Fecha 5
+          <span id="defStatusBadge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            ⚡ En tiempo real
           </span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-slate-800/80 rounded-xl p-4 border border-emerald-500/30 relative overflow-hidden flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Por el Título</span>
-                <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">CAT A</span>
-              </div>
-              <h4 class="text-base font-bold text-white mb-2">Gran Final</h4>
-              <div class="space-y-2 text-sm bg-slate-900/60 p-3 rounded-lg border border-slate-700/60">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs text-slate-400">1° A:</span>
-                  <span class="font-bold text-emerald-300 truncate max-w-[140px]" id="defFinal1">Por definir</span>
-                </div>
-                <div class="text-center text-xs font-bold text-slate-500">VS</div>
-                <div class="flex items-center justify-between">
-                  <span class="text-xs text-slate-400">2° A:</span>
-                  <span class="font-bold text-emerald-300 truncate max-w-[140px]" id="defFinal2">Por definir</span>
-                </div>
-              </div>
-            </div>
-            <p class="text-[11px] text-slate-400 mt-3">El ganador se consagra campeón de la categoría.</p>
-          </div>
-
-          <div class="bg-slate-800/80 rounded-xl p-4 border border-amber-500/30 relative overflow-hidden flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Permanencia / Ascenso</span>
-                <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">A vs B</span>
-              </div>
-              <h4 class="text-base font-bold text-white mb-2">Promoción</h4>
-              <div class="space-y-2 text-sm bg-slate-900/60 p-3 rounded-lg border border-slate-700/60">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs text-slate-400">4° A:</span>
-                  <span class="font-bold text-amber-300 truncate max-w-[140px]" id="defPromoA">Por definir</span>
-                </div>
-                <div class="text-center text-xs font-bold text-slate-500">VS</div>
-                <div class="flex items-center justify-between">
-                  <span class="text-xs text-slate-400">2° B:</span>
-                  <span class="font-bold text-amber-300 truncate max-w-[140px]" id="defPromoB">Por definir</span>
-                </div>
-              </div>
-            </div>
-            <p class="text-[11px] text-slate-400 mt-3">Partido único por una plaza en la Categoría A.</p>
-          </div>
-
-          <div class="bg-slate-800/80 rounded-xl p-4 border border-emerald-500/30 relative overflow-hidden flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Campeón B</span>
-                <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">CAT B</span>
-              </div>
-              <h4 class="text-base font-bold text-white mb-2">Ascenso Directo</h4>
-              <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60 text-center">
-                <span class="text-xs text-slate-400 block mb-1">1° de Categoría B</span>
-                <span class="text-base font-bold text-emerald-300 block truncate" id="defAscenso">Por definir</span>
-              </div>
-            </div>
-            <p class="text-[11px] text-slate-400 mt-3">Jugará la próxima edición en Categoría A.</p>
-          </div>
-
-          <div class="bg-slate-800/80 rounded-xl p-4 border border-rose-500/30 relative overflow-hidden flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-bold uppercase tracking-wider text-rose-400">Último A</span>
-                <span class="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded font-bold">CAT A</span>
-              </div>
-              <h4 class="text-base font-bold text-white mb-2">Descenso Directo</h4>
-              <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60 text-center">
-                <span class="text-xs text-slate-400 block mb-1">5° de Categoría A</span>
-                <span class="text-base font-bold text-rose-300 block truncate" id="defDescenso">Por definir</span>
-              </div>
-            </div>
-            <p class="text-[11px] text-slate-400 mt-3">Jugará la próxima edición en Categoría B.</p>
-          </div>
+        <!-- Contenedor inyectado por JS (Modo A/B o Modo Grupos) -->
+        <div id="definitionsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         </div>
       </section>
 
-      <!-- REGLAMENTO -->
-      <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <details class="group">
-          <summary class="flex items-center justify-between p-5 sm:p-6 cursor-pointer select-none font-bold text-slate-800 hover:text-court-700 transition-colors">
-            <span class="flex items-center gap-2 text-base sm:text-lg">
-              <svg class="w-5 h-5 text-court-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-              </svg>
-              Reglamento y Criterios de Clasificación
-            </span>
-            <span class="p-1 rounded-lg bg-slate-100 group-open:rotate-180 transition-transform text-slate-500">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </span>
-          </summary>
-          <div class="px-5 pb-6 sm:px-6 text-sm text-slate-600 border-t border-slate-100 pt-4 space-y-3 leading-relaxed">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                <h5 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-court-600"></span> Formato de Partido
-                </h5>
-                <p>Se juega al <strong>mejor de 3 sets</strong>. Si el encuentro va 1-1 en sets, se define mediante un <strong>tercer set tradicional</strong> o un <strong>super tie break a 11 puntos</strong>, según acuerdo entre ambos jugadores.</p>
-              </div>
-              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                <h5 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-court-600"></span> Criterio de Desempate
-                </h5>
-                <p>En caso de igualdad en puntos entre 2 jugadores, se define prioritariamente por el <strong>resultado del partido entre sí</strong>. En empates múltiples (3 o más jugadores), se aplica diferencia de sets.</p>
-              </div>
-              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                <h5 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Definición Categoría A
-                </h5>
-                <p>• <strong>1° y 2°</strong> disputan la Gran Final.<br />
-                   • <strong>4°</strong> juega el partido de Promoción.<br />
-                   • <strong>5°</strong> desciende automáticamente a Categoría B.</p>
-              </div>
-              <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                <h5 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-tennis-clay"></span> Definición Categoría B
-                </h5>
-                <p>• <strong>1°</strong> asciende directamente a Categoría A.<br />
-                   • <strong>2°</strong> clasifica a la Promoción frente al 4° de Categoría A.</p>
-              </div>
-            </div>
+      <!-- SECCIÓN GALERÍA Y REGLAMENTO -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Banner Galería de Fotos -->
+        <div class="bg-gradient-to-br from-court-700 to-court-900 text-white rounded-2xl p-6 shadow-sm border border-court-600 flex flex-col justify-between">
+          <div>
+            <span class="inline-block text-[11px] font-bold uppercase tracking-wider bg-tennis-ball text-court-900 px-2.5 py-0.5 rounded-full mb-3">Comunidad LB Tenis</span>
+            <h3 class="text-lg font-bold mb-2">📸 Fotos de los Partidos</h3>
+            <p class="text-xs text-emerald-100 leading-relaxed mb-4">
+              Subí la foto post-partido o mirá el álbum completo de todas las fechas en nuestra carpeta compartida de Google Drive.
+            </p>
           </div>
-        </details>
-      </section>
+          <a id="btnDriveBanner" href="#" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-4 bg-white text-court-900 hover:bg-tennis-ball font-bold text-xs sm:text-sm rounded-xl text-center transition-colors shadow flex items-center justify-center gap-2">
+            <span>Abrir Álbum en Google Drive</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </a>
+        </div>
+
+        <!-- Reglamento -->
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <details class="group" open>
+            <summary class="flex items-center justify-between p-5 sm:p-6 cursor-pointer select-none font-bold text-slate-800 hover:text-court-700 transition-colors">
+              <span class="flex items-center gap-2 text-base sm:text-lg">
+                <svg class="w-5 h-5 text-court-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                </svg>
+                Reglamento de la Edición
+              </span>
+              <span class="p-1 rounded-lg bg-slate-100 group-open:rotate-180 transition-transform text-slate-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </span>
+            </summary>
+            <div id="rulesContent" class="px-5 pb-6 sm:px-6 text-xs sm:text-sm text-slate-600 border-t border-slate-100 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 leading-relaxed">
+            </div>
+          </details>
+        </div>
+
+      </div>
 
     </div>
   </main>
 
   <footer class="bg-white border-t border-slate-200 mt-auto py-6 text-center text-xs text-slate-500">
     <div class="max-w-7xl mx-auto px-4">
-      <p class="font-semibold text-slate-700">LB TENIS © 2026 — Plataforma de Gestión de Torneos</p>
-      <p class="mt-1 text-slate-400">Sincronización en vivo con Google Sheets</p>
+      <p class="font-semibold text-slate-700">LB TENIS © 2026 — Plataforma Oficial</p>
+      <p class="mt-1 text-slate-400">Sincronización directa con Google Sheets</p>
     </div>
   </footer>
 
   <!-- ==================== LOGICA JAVASCRIPT ==================== -->
   <script>
-    // URL oficial de Google Sheets vinculada
+    // ==========================================
+    // CONFIGURACIÓN PRINCIPAL
+    // ==========================================
     const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRy7RWhzeeUv66oznEzwm8NBWjRRZv1iF_uIKO0kaeqAY8_QOtVpwB9V_vjH1TZhS78h7dHtRHoEM_3/pub?output=xlsx";
+    
+    // LINK OFICIAL DE LA CARPETA DE GOOGLE DRIVE PARA LAS FOTOS:
+    const FOTOS_DRIVE_URL = "https://drive.google.com/drive/folders/1nuFtUmSp927Jp60fSDfYTQIL33ZwoYbI?usp=drive_link"; 
+    // ==========================================
 
     const AppState = {
-      config: {
-        ptsWin: 2,
-        ptsLoss: 1,
-        ptsFree: 0,
-        playersA: [],
-        playersB: [],
-        schedule: {}
-      },
-      matches: [],
-      standingsA: [],
-      standingsB: [],
-      activeRoundFilter: 'all',
-      sourceName: 'Google Sheets (En Vivo)'
+      editions: [],
+      activeEditionIndex: 0,
+      activeRoundFilter: 'all'
     };
 
     window.addEventListener('DOMContentLoaded', () => {
-      initDragAndDrop();
-      initFileInput();
+      if (FOTOS_DRIVE_URL) {
+        document.getElementById('btnDrivePhotos').href = FOTOS_DRIVE_URL;
+        document.getElementById('btnDriveBanner').href = FOTOS_DRIVE_URL;
+      }
       fetchOnlineSheet();
     });
 
     async function fetchOnlineSheet() {
       const syncIcon = document.getElementById('syncIcon');
       if (syncIcon) syncIcon.classList.add('animate-spin-custom');
+      document.getElementById('errorState').classList.add('hidden');
+      document.getElementById('dashboardSection').classList.add('hidden');
+      document.getElementById('loadingState').classList.remove('hidden');
 
       try {
-        // Cache-busting para obligar a descargar siempre la versión más reciente
         const cacheBustUrl = GOOGLE_SHEET_URL + (GOOGLE_SHEET_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
         const response = await fetch(cacheBustUrl);
 
         if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
-
         const arrayBuffer = await response.arrayBuffer();
-        parseWorkbookBuffer(arrayBuffer, "Google Sheets (En Vivo)");
+        
+        parseMultiEditionWorkbook(arrayBuffer);
+
       } catch (err) {
         console.error("Error al cargar Google Sheet:", err);
-        showNotification('warning', 'No se pudo conectar automáticamente con Google Sheets. Podés cargar el archivo .xlsx de forma manual.');
         document.getElementById('loadingState').classList.add('hidden');
-        document.getElementById('uploadSection').classList.remove('hidden');
+        document.getElementById('errorState').classList.remove('hidden');
       } finally {
         if (syncIcon) syncIcon.classList.remove('animate-spin-custom');
       }
     }
 
-    function triggerFileInput() {
-      document.getElementById('fileInput').click();
-    }
+    function parseMultiEditionWorkbook(arrayBuffer) {
+      const data = new Uint8Array(arrayBuffer);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetNames = workbook.SheetNames;
+      
+      const parsedEditions = [];
 
-    function initFileInput() {
-      const input = document.getElementById('fileInput');
-      input.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) handleLocalFile(file);
-        input.value = '';
-      });
-    }
-
-    function initDragAndDrop() {
-      const dropZone = document.getElementById('dropZone');
-      ['dragenter', 'dragover'].forEach(name => {
-        window.addEventListener(name, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (dropZone) dropZone.classList.add('drop-active');
-        });
-      });
-
-      ['dragleave', 'drop'].forEach(name => {
-        window.addEventListener(name, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (dropZone) dropZone.classList.remove('drop-active');
-        });
-      });
-
-      window.addEventListener('drop', (e) => {
-        const file = e.dataTransfer.files[0];
-        if (file) handleLocalFile(file);
-      });
-    }
-
-    function handleLocalFile(file) {
-      if (!file.name.toLowerCase().endsWith('.xlsx')) {
-        showNotification('error', 'El archivo debe ser un .xlsx válido.');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        parseWorkbookBuffer(e.target.result, file.name);
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function parseWorkbookBuffer(arrayBuffer, sourceName) {
-      clearNotifications();
-      try {
-        const data = new Uint8Array(arrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
-
-        const sheetNames = workbook.SheetNames;
-        const partidosKey = sheetNames.find(s => cleanKey(s) === 'partidos');
-        const configKey = sheetNames.find(s => cleanKey(s) === 'config');
-
-        if (!partidosKey || !configKey) {
-          showNotification('error', 'El archivo debe contener las pestañas "Partidos" y "Config".');
-          document.getElementById('loadingState').classList.add('hidden');
-          document.getElementById('uploadSection').classList.remove('hidden');
-          return;
-        }
-
-        AppState.sourceName = sourceName;
-        parseConfigSheet(workbook.Sheets[configKey]);
-        parsePartidosSheet(workbook.Sheets[partidosKey]);
-        calculateStandings();
-        renderDashboard();
-
-      } catch (err) {
-        console.error(err);
-        showNotification('error', 'Error al procesar la planilla: ' + err.message);
-        document.getElementById('loadingState').classList.add('hidden');
-        document.getElementById('uploadSection').classList.remove('hidden');
-      }
-    }
-
-    function cleanString(val) {
-      if (val === undefined || val === null) return '';
-      return String(val).trim();
-    }
-
-    function cleanKey(val) {
-      return cleanString(val)
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
-    }
-
-    function parseConfigSheet(sheet) {
-      const getCell = (addr) => {
-        const c = sheet[addr];
-        return c ? c.v : '';
-      };
-
-      const ptsWin = Number(getCell('C5'));
-      const ptsLoss = Number(getCell('C6'));
-      const ptsFree = Number(getCell('C7'));
-
-      AppState.config.ptsWin = !isNaN(ptsWin) && ptsWin !== 0 ? ptsWin : 2;
-      AppState.config.ptsLoss = !isNaN(ptsLoss) ? ptsLoss : 1;
-      AppState.config.ptsFree = !isNaN(ptsFree) ? ptsFree : 0;
-
-      // Jugadores Categoría A: B11:B15
-      const playersA = [];
-      ['B11', 'B12', 'B13', 'B14', 'B15'].forEach(addr => {
-        const name = cleanString(getCell(addr));
-        if (name && name !== '0' && name.toLowerCase() !== 'libre') {
-          playersA.push(name);
-        }
-      });
-
-      // Jugadores Categoría B: C11:C15 (con fallback en B16:B20)
-      const playersB = [];
-      ['C11', 'C12', 'C13', 'C14', 'C15'].forEach(addr => {
-        const name = cleanString(getCell(addr));
-        if (name && name !== '0' && name.toLowerCase() !== 'libre') {
-          playersB.push(name);
-        }
-      });
-      if (playersB.length === 0) {
-        ['B16', 'B17', 'B18', 'B19', 'B20'].forEach(addr => {
-          const name = cleanString(getCell(addr));
-          if (name && name !== '0' && name.toLowerCase() !== 'libre') {
-            playersB.push(name);
+      sheetNames.forEach(sheetName => {
+        const cleanS = cleanKey(sheetName);
+        if (cleanS.startsWith('config')) {
+          const suffix = cleanS.replace('config', '').trim();
+          const expectedPartidosName = 'partidos' + (suffix ? ' ' + suffix : '');
+          
+          const partidosSheetName = sheetNames.find(s => cleanKey(s) === expectedPartidosName || (suffix === '1' && cleanKey(s) === 'partidos'));
+          
+          if (partidosSheetName) {
+            const edData = buildEditionData(workbook.Sheets[sheetName], workbook.Sheets[partidosSheetName], suffix || '1');
+            parsedEditions.push(edData);
           }
-        });
-      }
-
-      // Calendario
-      const schedule = {};
-      const roundCells = [
-        { r: 'B20', p: 'C20' },
-        { r: 'B21', p: 'C21' },
-        { r: 'B22', p: 'C22' },
-        { r: 'B23', p: 'C23' },
-        { r: 'B24', p: 'C24' }
-      ];
-
-      roundCells.forEach(item => {
-        const roundNum = cleanString(getCell(item.r));
-        const periodText = cleanString(getCell(item.p));
-        if (roundNum) schedule[roundNum] = periodText;
+        }
       });
 
-      AppState.config.playersA = playersA;
-      AppState.config.playersB = playersB;
-      AppState.config.schedule = schedule;
+      if (parsedEditions.length === 0) {
+        throw new Error("No se encontraron pestañas válidas (Config y Partidos) en el Excel.");
+      }
+
+      parsedEditions.sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric: true }));
+      AppState.editions = parsedEditions;
+      
+      // Mostrar siempre la última edición disponible por defecto
+      AppState.activeEditionIndex = parsedEditions.length - 1;
+      
+      populateEditionSelector();
+      renderActiveEdition();
     }
 
-    function parsePartidosSheet(sheet) {
-      const rawRows = XLSX.utils.sheet_to_json(sheet, { range: 1, defval: '' });
+    function buildEditionData(configSheet, partidosSheet, id) {
+      const getCell = (addr) => { const c = configSheet[addr]; return c && c.v !== undefined ? c.v : ''; };
+      
+      const ptsWinRaw = Number(getCell('C5'));
+      const ptsLossRaw = Number(getCell('C6'));
+      const ptsFreeRaw = Number(getCell('C7'));
+
+      const config = {
+        ptsWin: !isNaN(ptsWinRaw) ? ptsWinRaw : 1,
+        ptsLoss: !isNaN(ptsLossRaw) ? ptsLossRaw : 0,
+        ptsFree: !isNaN(ptsFreeRaw) ? ptsFreeRaw : 0,
+        cat1Name: cleanString(getCell('B10')) || 'Categoría A',
+        cat2Name: cleanString(getCell('C10')) || 'Categoría B',
+        players1: [],
+        players2: [],
+        schedule: {}
+      };
+
+      const format = cleanKey(config.cat1Name).includes('grupo') ? 'GROUPS' : 'AB';
+      config.format = format;
+
+      for (let i = 11; i <= 20; i++) {
+        const name = cleanString(getCell(`B${i}`));
+        if (name && name !== '0' && cleanKey(name) !== 'libre' && cleanKey(name) !== 'fecha' && cleanKey(name) !== 'calendario') {
+          config.players1.push(name);
+        }
+      }
+      for (let i = 11; i <= 20; i++) {
+        const name = cleanString(getCell(`C${i}`));
+        if (name && name !== '0' && cleanKey(name) !== 'libre' && cleanKey(name) !== 'periodo') {
+          config.players2.push(name);
+        }
+      }
+
+      for (let i = 20; i <= 28; i++) {
+        const roundNum = cleanString(getCell(`B${i}`));
+        const periodText = cleanString(getCell(`C${i}`));
+        if (roundNum && cleanKey(roundNum) !== 'regla' && cleanKey(roundNum) !== 'reglas de definicion') {
+          config.schedule[roundNum] = periodText;
+        }
+      }
+
+      const rawRows = XLSX.utils.sheet_to_json(partidosSheet, { range: 1, defval: '' });
       const matches = [];
 
       rawRows.forEach((row) => {
         const norm = {};
-        Object.keys(row).forEach(k => {
-          norm[cleanKey(k)] = row[k];
-        });
+        Object.keys(row).forEach(k => { norm[cleanKey(k)] = row[k]; });
 
         const fecha = norm['fecha'];
-        const rawCat = cleanString(norm['categoria']);
-        let cat = '';
-        if (rawCat.toLowerCase().includes('b')) cat = 'B';
-        else if (rawCat.toLowerCase().includes('a')) cat = 'A';
-
+        const cat = cleanString(norm['categoria']);
         const j1 = cleanString(norm['jugador 1']);
-        const j2 = cleanString(norm['jugador 2']);
-
+        
         if (!fecha && !cat && !j1) return;
+        if (String(fecha).toLowerCase().includes('carga solo')) return;
 
         matches.push({
           fecha: Number(fecha) || fecha,
-          periodo: cleanString(norm['periodo']) || AppState.config.schedule[fecha] || `Fecha ${fecha}`,
+          periodo: cleanString(norm['periodo']) || config.schedule[fecha] || `Fecha ${fecha}`,
           categoria: cat,
           jugador1: j1,
-          jugador2: j2,
-          set1J1: norm['set 1 j1'],
-          set1J2: norm['set 1 j2'],
-          set2J1: norm['set 2 j1'],
-          set2J2: norm['set 2 j2'],
+          jugador2: cleanString(norm['jugador 2']),
+          set1J1: norm['set 1 j1'], set1J2: norm['set 1 j2'],
+          set2J1: norm['set 2 j1'], set2J2: norm['set 2 j2'],
           definicion: cleanString(norm['definicion']),
-          defJ1: norm['def j1'],
-          defJ2: norm['def j2'],
-          setsJ1: Number(norm['sets j1']) || 0,
-          setsJ2: Number(norm['sets j2']) || 0,
+          defJ1: norm['def j1'], defJ2: norm['def j2'],
+          setsJ1: Number(norm['sets j1']) || 0, setsJ2: Number(norm['sets j2']) || 0,
           resultado: cleanString(norm['resultado']),
           ganador: cleanString(norm['ganador']),
           estado: cleanString(norm['estado']) || 'Pendiente'
         });
       });
 
-      AppState.matches = matches;
+      const standings1 = calculateStandings(matches, config.cat1Name, 'A', config.players1, config);
+      const standings2 = calculateStandings(matches, config.cat2Name, 'B', config.players2, config);
+
+      return { id, config, matches, standings1, standings2 };
     }
 
-    function calculateStandings() {
-      AppState.standingsA = calculateCategoryStandings('A', AppState.config.playersA);
-      AppState.standingsB = calculateCategoryStandings('B', AppState.config.playersB);
+    function matchesCategory(matchCat, fullCatName, shortCode) {
+      const mKey = cleanKey(matchCat);
+      const fullKey = cleanKey(fullCatName);
+      if (!mKey) return false;
+      if (mKey === fullKey || mKey === cleanKey(shortCode)) return true;
+      if (fullKey.includes('grupo 1') && (mKey === 'g1' || mKey === '1' || mKey.includes('grupo 1'))) return true;
+      if (fullKey.includes('grupo 2') && (mKey === 'g2' || mKey === '2' || mKey.includes('grupo 2'))) return true;
+      if (fullKey.includes('categoria a') && (mKey === 'a' || mKey === 'cat a')) return true;
+      if (fullKey.includes('categoria b') && (mKey === 'b' || mKey === 'cat b')) return true;
+      return false;
     }
 
-    function calculateCategoryStandings(category, roster) {
-      const catMatches = AppState.matches.filter(m => m.categoria === category);
+    function calculateStandings(allMatches, categoryName, shortCode, roster, config) {
+      const catMatches = allMatches.filter(m => matchesCategory(m.categoria, categoryName, shortCode));
 
       let players = roster && roster.length > 0 ? [...roster] : [];
       if (players.length === 0) {
         const set = new Set();
         catMatches.forEach(m => {
-          if (m.jugador1 && m.jugador1.toLowerCase() !== 'libre') set.add(m.jugador1);
-          if (m.jugador2 && m.jugador2.toLowerCase() !== 'libre') set.add(m.jugador2);
+          if (m.jugador1 && cleanKey(m.jugador1) !== 'libre') set.add(m.jugador1);
+          if (m.jugador2 && cleanKey(m.jugador2) !== 'libre') set.add(m.jugador2);
         });
         players = Array.from(set);
       }
 
       const statsMap = {};
       players.forEach(pName => {
-        statsMap[pName.toLowerCase()] = {
-          name: pName,
-          category: category,
-          pj: 0,
-          pg: 0,
-          pp: 0,
-          sf: 0,
-          sc: 0,
-          dif: 0,
-          pts: 0,
-          hasTieWarning: false,
-          tieWarningText: ''
+        statsMap[cleanKey(pName)] = {
+          name: pName, category: categoryName, pj: 0, pg: 0, pp: 0, sf: 0, sc: 0, dif: 0, pts: 0,
+          hasTieWarning: false, tieWarningText: ''
         };
       });
 
       catMatches.forEach(m => {
         if (cleanKey(m.estado) !== 'jugado') return;
-
         const k1 = cleanKey(m.jugador1);
         const k2 = cleanKey(m.jugador2);
         const winnerKey = cleanKey(m.ganador);
 
         if (statsMap[k1]) {
-          statsMap[k1].pj += 1;
-          statsMap[k1].sf += m.setsJ1;
-          statsMap[k1].sc += m.setsJ2;
-          if (winnerKey === k1) statsMap[k1].pg += 1;
-          else statsMap[k1].pp += 1;
+          statsMap[k1].pj += 1; statsMap[k1].sf += m.setsJ1; statsMap[k1].sc += m.setsJ2;
+          if (winnerKey === k1) statsMap[k1].pg += 1; else statsMap[k1].pp += 1;
         }
-
         if (statsMap[k2]) {
-          statsMap[k2].pj += 1;
-          statsMap[k2].sf += m.setsJ2;
-          statsMap[k2].sc += m.setsJ1;
-          if (winnerKey === k2) statsMap[k2].pg += 1;
-          else statsMap[k2].pp += 1;
+          statsMap[k2].pj += 1; statsMap[k2].sf += m.setsJ2; statsMap[k2].sc += m.setsJ1;
+          if (winnerKey === k2) statsMap[k2].pg += 1; else statsMap[k2].pp += 1;
         }
       });
 
       const list = Object.values(statsMap).map(player => {
         player.dif = player.sf - player.sc;
-        player.pts = (player.pg * AppState.config.ptsWin) + (player.pp * AppState.config.ptsLoss);
+        player.pts = (player.pg * config.ptsWin) + (player.pp * config.ptsLoss);
         return player;
       });
 
-      // Agrupamiento por puntos para desempates reglamentarios
       const ptsGroups = {};
-      list.forEach(p => {
-        if (!ptsGroups[p.pts]) ptsGroups[p.pts] = [];
-        ptsGroups[p.pts].push(p);
-      });
-
+      list.forEach(p => { if (!ptsGroups[p.pts]) ptsGroups[p.pts] = []; ptsGroups[p.pts].push(p); });
       const sortedPts = Object.keys(ptsGroups).map(Number).sort((a, b) => b - a);
       let finalSortedList = [];
 
       sortedPts.forEach(ptsVal => {
         const group = ptsGroups[ptsVal];
-
         if (group.length === 1) {
           finalSortedList.push(group[0]);
         } else if (group.length === 2) {
@@ -788,105 +550,113 @@
 
           if (directMatch && directMatch.ganador) {
             const w = cleanKey(directMatch.ganador);
-            if (w === cleanKey(pA.name)) {
-              finalSortedList.push(pA, pB);
-            } else if (w === cleanKey(pB.name)) {
-              finalSortedList.push(pB, pA);
-            } else {
-              group.sort((a, b) => (b.dif - a.dif) || (b.sf - a.sf));
-              group.forEach(g => {
-                g.hasTieWarning = true;
-                g.tieWarningText = 'Empate en puntos — verificar definición por partido entre sí';
-              });
-              finalSortedList.push(...group);
-            }
+            if (w === cleanKey(pA.name)) finalSortedList.push(pA, pB);
+            else if (w === cleanKey(pB.name)) finalSortedList.push(pB, pA);
+            else applyDiffSort(group, finalSortedList);
           } else {
-            group.sort((a, b) => (b.dif - a.dif) || (b.sf - a.sf));
-            group.forEach(g => {
-              g.hasTieWarning = true;
-              g.tieWarningText = 'Empate en puntos — verificar definición por partido entre sí';
-            });
-            finalSortedList.push(...group);
+            applyDiffSort(group, finalSortedList);
           }
         } else {
-          group.sort((a, b) => (b.dif - a.dif) || (b.sf - a.sf));
-          group.forEach(g => {
-            g.hasTieWarning = true;
-            g.tieWarningText = 'Empate en puntos — verificar definición por partido entre sí';
-          });
-          finalSortedList.push(...group);
+          applyDiffSort(group, finalSortedList);
         }
       });
-
       return finalSortedList;
     }
 
-    function renderDashboard() {
-      document.getElementById('loadingState').classList.add('hidden');
-      document.getElementById('uploadSection').classList.add('hidden');
-      document.getElementById('dashboardSection').classList.remove('hidden');
-
-      const fileBadge = document.getElementById('fileLoadedBadge');
-      fileBadge.classList.remove('hidden');
-      fileBadge.classList.add('flex');
-      document.getElementById('loadedFileName').textContent = AppState.sourceName;
-      
-      const now = new Date();
-      document.getElementById('loadedFileDate').textContent = `Act: ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} hs`;
-      document.getElementById('headerSubtitle').textContent = `Torneo en curso • ${AppState.matches.length} partidos cargados`;
-
-      const totalMatches = AppState.matches.filter(m => m.jugador2 && cleanKey(m.jugador2) !== 'libre').length;
-      const playedMatches = AppState.matches.filter(m => cleanKey(m.estado) === 'jugado').length;
-      const pendingMatches = AppState.matches.filter(m => cleanKey(m.estado) === 'pendiente' || cleanKey(m.estado) === 'falta definicion').length;
-
-      document.getElementById('statTotalMatches').textContent = totalMatches;
-      document.getElementById('statPlayedMatches').textContent = playedMatches;
-      document.getElementById('statPendingMatches').textContent = pendingMatches;
-      document.getElementById('statPtsWin').textContent = `${AppState.config.ptsWin} / ${AppState.config.ptsLoss} pts`;
-
-      document.getElementById('countPlayersA').textContent = `${AppState.standingsA.length} Jugadores`;
-      document.getElementById('countPlayersB').textContent = `${AppState.standingsB.length} Jugadores`;
-
-      renderStandingsTable('tableBodyA', AppState.standingsA, 'A');
-      renderStandingsTable('tableBodyB', AppState.standingsB, 'B');
-      renderFixture();
-      renderDefinitions();
+    function applyDiffSort(group, listToAppend) {
+      group.sort((a, b) => (b.dif - a.dif) || (b.sf - a.sf));
+      group.forEach(g => {
+        g.hasTieWarning = true;
+        g.tieWarningText = 'Empate en puntos — verificar definición por partido entre sí';
+      });
+      listToAppend.push(...group);
     }
 
-    function renderStandingsTable(tbodyId, standings, category) {
+    function populateEditionSelector() {
+      const select = document.getElementById('editionSelector');
+      select.innerHTML = '';
+      
+      select.classList.remove('hidden');
+      AppState.editions.forEach((ed, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `🏆 Edición ${ed.id.toUpperCase()}`;
+        if (idx === AppState.activeEditionIndex) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function changeEdition(index) {
+      AppState.activeEditionIndex = Number(index);
+      AppState.activeRoundFilter = 'all';
+      renderActiveEdition();
+    }
+
+    function renderActiveEdition() {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('dashboardSection').classList.remove('hidden');
+
+      const data = AppState.editions[AppState.activeEditionIndex];
+      const format = data.config.format;
+
+      const realMatches = data.matches.filter(m => m.jugador2 && cleanKey(m.jugador2) !== 'libre');
+      const playedM = realMatches.filter(m => cleanKey(m.estado) === 'jugado').length;
+      const pendM = realMatches.filter(m => cleanKey(m.estado) !== 'jugado').length;
+
+      document.getElementById('headerSubtitle').textContent = `Edición ${data.id.toUpperCase()} (${format === 'GROUPS' ? 'Fase de Grupos + Playoffs' : 'Categorías A y B'})`;
+
+      document.getElementById('statTotalMatches').textContent = realMatches.length;
+      document.getElementById('statPlayedMatches').textContent = playedM;
+      document.getElementById('statPendingMatches').textContent = pendM;
+      document.getElementById('statPtsWin').textContent = `${data.config.ptsWin} / ${data.config.ptsLoss}`;
+
+      document.getElementById('labelTable1').textContent = format === 'GROUPS' ? 'G1' : 'CAT A';
+      document.getElementById('titleTable1').textContent = data.config.cat1Name;
+      document.getElementById('countPlayers1').textContent = `${data.standings1.length} Jugadores`;
+      
+      document.getElementById('labelTable2').textContent = format === 'GROUPS' ? 'G2' : 'CAT B';
+      document.getElementById('titleTable2').textContent = data.config.cat2Name;
+      document.getElementById('countPlayers2').textContent = `${data.standings2.length} Jugadores`;
+
+      renderStandingsUI('tableBody1', 'legendTable1', data.standings1, 1, format);
+      renderStandingsUI('tableBody2', 'legendTable2', data.standings2, 2, format);
+      
+      renderDynamicFixture(data);
+      renderDynamicDefinitions(data);
+      renderDynamicRules(format);
+    }
+
+    function renderStandingsUI(tbodyId, legendId, standings, tableIndex, format) {
       const tbody = document.getElementById(tbodyId);
+      const legend = document.getElementById(legendId);
       tbody.innerHTML = '';
+      legend.innerHTML = '';
 
       if (standings.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">Sin datos de Categoría ${category}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">Sin datos de jugadores</td></tr>`;
         return;
       }
 
       standings.forEach((player, index) => {
         const pos = index + 1;
         const tr = document.createElement('tr');
-
+        
         let borderClass = 'border-transparent';
         let badgeHtml = '';
 
-        if (category === 'A') {
-          if (pos === 1 || pos === 2) {
-            borderClass = 'border-emerald-500 bg-emerald-50/20';
-            badgeHtml = `<span class="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">FINAL</span>`;
-          } else if (pos === 4) {
-            borderClass = 'border-amber-500 bg-amber-50/20';
-            badgeHtml = `<span class="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">PROMOCIÓN</span>`;
-          } else if (pos === 5) {
-            borderClass = 'border-rose-500 bg-rose-50/20';
-            badgeHtml = `<span class="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300">DESCIENDE</span>`;
+        if (format === 'AB') {
+          if (tableIndex === 1) {
+            if (pos === 1 || pos === 2) { borderClass = 'border-emerald-500 bg-emerald-50/20'; badgeHtml = getBadge('FINAL', 'emerald'); }
+            else if (pos === 4) { borderClass = 'border-amber-500 bg-amber-50/20'; badgeHtml = getBadge('PROMOCIÓN', 'amber'); }
+            else if (pos === 5) { borderClass = 'border-rose-500 bg-rose-50/20'; badgeHtml = getBadge('DESCIENDE', 'rose'); }
+          } else {
+            if (pos === 1) { borderClass = 'border-emerald-500 bg-emerald-50/20'; badgeHtml = getBadge('ASCIENDE', 'emerald'); }
+            else if (pos === 2) { borderClass = 'border-amber-500 bg-amber-50/20'; badgeHtml = getBadge('PROMOCIÓN', 'amber'); }
           }
-        } else if (category === 'B') {
-          if (pos === 1) {
-            borderClass = 'border-emerald-500 bg-emerald-50/20';
-            badgeHtml = `<span class="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">ASCIENDE</span>`;
-          } else if (pos === 2) {
-            borderClass = 'border-amber-500 bg-amber-50/20';
-            badgeHtml = `<span class="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">PROMOCIÓN</span>`;
+        } else if (format === 'GROUPS') {
+          if (pos <= 2) {
+            borderClass = 'border-emerald-500 bg-emerald-50/20'; 
+            badgeHtml = getBadge('SEMIFINAL', 'emerald');
           }
         }
 
@@ -896,14 +666,9 @@
         if (player.hasTieWarning) {
           warningHtml = `
             <span class="tooltip-wrapper cursor-help text-amber-600 ml-1.5">
-              <svg class="w-4 h-4 inline" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="tooltip-content bg-slate-900 text-amber-200 text-[11px] font-normal py-1.5 px-3 rounded shadow-lg border border-slate-700">
-                ${player.tieWarningText}
-              </span>
-            </span>
-          `;
+              <svg class="w-4 h-4 inline" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+              <span class="tooltip-content bg-slate-900 text-amber-200 text-[11px] font-normal py-1.5 px-3 rounded shadow-lg border border-slate-700">${player.tieWarningText}</span>
+            </span>`;
         }
 
         tr.innerHTML = `
@@ -911,8 +676,7 @@
           <td class="py-3 px-3">
             <div class="flex items-center flex-wrap gap-1">
               <span class="font-bold text-slate-900">${escapeHtml(player.name)}</span>
-              ${badgeHtml}
-              ${warningHtml}
+              ${badgeHtml} ${warningHtml}
             </div>
           </td>
           <td class="py-3 px-2 text-center tabular-nums text-slate-600">${player.pj}</td>
@@ -920,89 +684,114 @@
           <td class="py-3 px-2 text-center tabular-nums text-slate-500">${player.pp}</td>
           <td class="py-3 px-2 text-center tabular-nums text-slate-600">${player.sf}</td>
           <td class="py-3 px-2 text-center tabular-nums text-slate-600">${player.sc}</td>
-          <td class="py-3 px-2 text-center tabular-nums font-bold ${player.dif > 0 ? 'text-emerald-700' : player.dif < 0 ? 'text-rose-700' : 'text-slate-600'}">
-            ${player.dif > 0 ? '+' + player.dif : player.dif}
-          </td>
-          <td class="py-3 px-3 text-center tabular-nums font-black text-slate-900 bg-slate-100/70 text-sm">
-            ${player.pts}
-          </td>
+          <td class="py-3 px-2 text-center tabular-nums font-bold ${player.dif > 0 ? 'text-emerald-700' : player.dif < 0 ? 'text-rose-700' : 'text-slate-600'}">${player.dif > 0 ? '+' + player.dif : player.dif}</td>
+          <td class="py-3 px-3 text-center tabular-nums font-black text-slate-900 bg-slate-100/70 text-sm">${player.pts}</td>
         `;
-
         tbody.appendChild(tr);
       });
+
+      if (format === 'AB') {
+        if(tableIndex === 1) legend.innerHTML = `<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 1°-2° Final</span><span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> 4° Promoción</span><span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> 5° Desciende</span>`;
+        else legend.innerHTML = `<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 1° Asciende directo</span><span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> 2° Promoción</span>`;
+      } else {
+        legend.innerHTML = `<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 1° y 2° clasifican a Semifinales</span>`;
+      }
     }
 
-    function setRoundFilter(filter) {
-      AppState.activeRoundFilter = filter;
-      document.querySelectorAll('.filter-tab').forEach(btn => {
-        if (btn.dataset.filter === filter) {
-          btn.className = 'filter-tab px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-sm';
-        } else {
-          btn.className = 'filter-tab px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all';
-        }
+    function getBadge(text, color) {
+      return `<span class="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-${color}-100 text-${color}-800 border border-${color}-300">${text}</span>`;
+    }
+
+    function renderDynamicFixture(data) {
+      const rawFechas = [...new Set(data.matches.map(m => String(m.fecha).trim()).filter(Boolean))];
+      rawFechas.sort((a, b) => {
+        const numA = Number(a), numB = Number(b);
+        if(!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        if(!isNaN(numA)) return -1;
+        if(!isNaN(numB)) return 1;
+        return a.localeCompare(b);
       });
-      renderFixture();
-    }
 
-    function renderFixture() {
+      const tabsContainer = document.getElementById('roundFilterTabs');
+      tabsContainer.innerHTML = `<button onclick="setRoundFilter('all')" data-filter="all" class="filter-tab px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${AppState.activeRoundFilter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}">Todas</button>`;
+      
+      rawFechas.forEach(f => {
+        const btn = document.createElement('button');
+        const isActive = AppState.activeRoundFilter === f;
+        btn.className = `filter-tab px-3 py-1.5 rounded-lg text-xs transition-all ${isActive ? 'font-bold bg-white text-slate-900 shadow-sm' : 'font-medium text-slate-600 hover:text-slate-900'}`;
+        btn.onclick = () => setRoundFilter(f);
+        btn.dataset.filter = f;
+        const pText = data.config.schedule[f] || '';
+        if (cleanKey(pText).includes('semi')) btn.textContent = 'Semis';
+        else if (cleanKey(pText).includes('final') || cleanKey(pText).includes('definicion')) btn.textContent = 'Finales';
+        else btn.textContent = isNaN(Number(f)) ? f : `F${f}`;
+        tabsContainer.appendChild(btn);
+      });
+
       const container = document.getElementById('fixtureContainer');
       container.innerHTML = '';
 
-      const allRounds = [1, 2, 3, 4, 5];
-      const selectedRounds = AppState.activeRoundFilter === 'all' 
-        ? allRounds 
-        : [Number(AppState.activeRoundFilter)];
+      const selectedRounds = AppState.activeRoundFilter === 'all' ? rawFechas : [AppState.activeRoundFilter];
 
-      selectedRounds.forEach(roundNum => {
-        const roundMatches = AppState.matches.filter(m => Number(m.fecha) === roundNum);
-        const periodText = AppState.config.schedule[roundNum] || 
-                           (roundMatches[0] && roundMatches[0].periodo ? roundMatches[0].periodo : '');
+      selectedRounds.forEach(roundId => {
+        const roundMatches = data.matches.filter(m => String(m.fecha).trim() === roundId);
+        if (roundMatches.length === 0) return;
+
+        const periodText = data.config.schedule[roundId] || roundMatches[0].periodo || '';
 
         const roundSection = document.createElement('div');
         roundSection.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden';
+        
+        const headerTitle = isNaN(Number(roundId)) ? roundId : `Fecha ${roundId}`;
 
-        const matchesCatA = roundMatches.filter(m => m.categoria === 'A');
-        const matchesCatB = roundMatches.filter(m => m.categoria === 'B');
+        const matchesByCat = {};
+        roundMatches.forEach(m => {
+          let catLabel = m.categoria || 'General';
+          if (matchesCategory(catLabel, data.config.cat1Name, 'A')) catLabel = data.config.cat1Name;
+          else if (matchesCategory(catLabel, data.config.cat2Name, 'B')) catLabel = data.config.cat2Name;
+          if(!matchesByCat[catLabel]) matchesByCat[catLabel] = [];
+          matchesByCat[catLabel].push(m);
+        });
+
+        let columnsHtml = '';
+        Object.keys(matchesByCat).forEach(catKey => {
+          columnsHtml += `
+            <div class="space-y-3">
+              <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+                <span class="text-xs font-bold text-court-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-court-600"></span> ${escapeHtml(catKey)}
+                </span>
+              </div>
+              <div class="space-y-2.5">
+                ${matchesByCat[catKey].map(m => createMatchCard(m)).join('')}
+              </div>
+            </div>`;
+        });
+
+        const colCount = Math.min(Object.keys(matchesByCat).length, 2);
 
         roundSection.innerHTML = `
           <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-court-600"></span>
-              <h3 class="font-bold text-slate-900 text-base">Fecha ${roundNum}</h3>
+              <h3 class="font-bold text-slate-900 text-base">${headerTitle}</h3>
               ${periodText ? `<span class="text-xs text-slate-500 font-medium">— ${escapeHtml(periodText)}</span>` : ''}
             </div>
             <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700">
               ${roundMatches.filter(m => cleanKey(m.estado) === 'jugado').length}/${roundMatches.filter(m => cleanKey(m.estado) !== 'libre').length} Jugados
             </span>
           </div>
-
-          <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-3">
-              <div class="flex items-center justify-between pb-1 border-b border-slate-100">
-                <span class="text-xs font-bold text-court-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-court-700"></span> Categoría A
-                </span>
-              </div>
-              <div class="space-y-2.5">
-                ${matchesCatA.length > 0 ? matchesCatA.map(m => createMatchCard(m)).join('') : '<p class="text-xs text-slate-400 py-3 text-center">Sin partidos registrados</p>'}
-              </div>
-            </div>
-
-            <div class="space-y-3">
-              <div class="flex items-center justify-between pb-1 border-b border-slate-100">
-                <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Categoría B
-                </span>
-              </div>
-              <div class="space-y-2.5">
-                ${matchesCatB.length > 0 ? matchesCatB.map(m => createMatchCard(m)).join('') : '<p class="text-xs text-slate-400 py-3 text-center">Sin partidos registrados</p>'}
-              </div>
-            </div>
+          <div class="p-5 grid grid-cols-1 md:grid-cols-${colCount} gap-6">
+            ${columnsHtml}
           </div>
         `;
-
         container.appendChild(roundSection);
       });
+    }
+
+    function setRoundFilter(filter) {
+      AppState.activeRoundFilter = filter;
+      renderActiveEdition();
     }
 
     function createMatchCard(m) {
@@ -1017,8 +806,7 @@
               <span class="font-medium text-slate-600">${escapeHtml(m.jugador1)}</span>
             </div>
             <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-slate-200/80 text-slate-600 tracking-wider">Fecha Libre</span>
-          </div>
-        `;
+          </div>`;
       }
 
       if (isJugado) {
@@ -1035,12 +823,10 @@
           <div class="p-3.5 bg-white rounded-xl border border-slate-200 hover:border-court-400 transition-all shadow-xs flex flex-col gap-2">
             <div class="flex items-center justify-between text-xs">
               <span class="font-bold text-emerald-700 flex items-center gap-1">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Jugado
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Jugado
               </span>
               ${defBadge}
             </div>
-
             <div class="flex items-center justify-between gap-3 text-sm">
               <div class="flex-1 space-y-1">
                 <div class="flex items-center gap-1.5 ${isJ1Winner ? 'font-black text-slate-900' : 'text-slate-600 font-medium'}">
@@ -1052,13 +838,11 @@
                   <span class="truncate">${escapeHtml(m.jugador2)}</span>
                 </div>
               </div>
-
-              <div class="bg-slate-100/90 px-3 py-1.5 rounded-lg text-right font-mono font-bold text-xs sm:text-sm text-slate-800 whitespace-nowrap shadow-inner border border-slate-200">
+              <div class="bg-slate-100/90 px-3 py-1.5 rounded-lg text-right font-mono font-bold text-xs sm:text-sm text-slate-800 whitespace-nowrap border border-slate-200">
                 ${escapeHtml(m.resultado || `${m.setsJ1} - ${m.setsJ2}`)}
               </div>
             </div>
-          </div>
-        `;
+          </div>`;
       }
 
       if (isFaltaDef) {
@@ -1066,12 +850,10 @@
           <div class="p-3.5 bg-amber-50/50 rounded-xl border border-amber-200 shadow-xs flex flex-col gap-2">
             <div class="flex items-center justify-between text-xs">
               <span class="font-bold text-amber-700 flex items-center gap-1">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Falta definir
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Falta definir
               </span>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-200 text-amber-900">1-1 en Sets</span>
             </div>
-
             <div class="flex items-center justify-between gap-3 text-sm">
               <div class="flex-1 space-y-1 font-semibold text-slate-700">
                 <div class="truncate">${escapeHtml(m.jugador1)}</div>
@@ -1083,8 +865,7 @@
                 </span>
               </div>
             </div>
-          </div>
-        `;
+          </div>`;
       }
 
       return `
@@ -1094,56 +875,160 @@
             <div class="truncate text-slate-500">${escapeHtml(m.jugador2)}</div>
           </div>
           <div class="text-right">
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-200/80 text-slate-600">
-              Por jugar
-            </span>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-200/80 text-slate-600">Por jugar</span>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
-    function renderDefinitions() {
-      const posA = AppState.standingsA;
-      const posB = AppState.standingsB;
-
-      document.getElementById('defFinal1').textContent = posA[0] ? `1° ${posA[0].name}` : 'Por definir';
-      document.getElementById('defFinal2').textContent = posA[1] ? `2° ${posA[1].name}` : 'Por definir';
-      document.getElementById('defPromoA').textContent = posA[3] ? `4° ${posA[3].name}` : 'Por definir';
-      document.getElementById('defPromoB').textContent = posB[1] ? `2° ${posB[1].name}` : 'Por definir';
-      document.getElementById('defAscenso').textContent = posB[0] ? posB[0].name : 'Por definir';
-      document.getElementById('defDescenso').textContent = posA[4] ? posA[4].name : 'Por definir';
+    // Busca si un partido de definición (Final, Semifinal, Promoción) ya está cargado en la hoja Partidos
+    function findPlayoffMatch(matches, keyword) {
+      return matches.find(m => cleanKey(m.categoria).includes(keyword) || cleanKey(m.periodo).includes(keyword));
     }
 
-    function showNotification(type, message) {
-      const container = document.getElementById('notificationArea');
-      const isError = type === 'error';
-      const isWarning = type === 'warning';
-      const el = document.createElement('div');
-      el.className = `p-4 rounded-xl border flex items-start gap-3 shadow-sm ${
-        isError ? 'bg-rose-50 border-rose-200 text-rose-800' :
-        isWarning ? 'bg-amber-50 border-amber-200 text-amber-800' :
-        'bg-emerald-50 border-emerald-200 text-emerald-800'
-      }`;
-      el.innerHTML = `
-        <div class="mt-0.5 flex-shrink-0">${isError ? '❌' : isWarning ? '⚠️' : '✅'}</div>
-        <div class="flex-1 text-sm font-medium">${message}</div>
-        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600">✕</button>
-      `;
-      container.appendChild(el);
+    function renderDynamicDefinitions(data) {
+      const container = document.getElementById('definitionsContainer');
+      const st1 = data.standings1;
+      const st2 = data.standings2;
+
+      if (data.config.format === 'AB') {
+        const finalMatch = data.matches.find(m => cleanKey(m.categoria) === 'final' || cleanKey(m.categoria) === 'final a');
+        const promoMatch = data.matches.find(m => cleanKey(m.categoria).includes('promocion'));
+
+        const fJ1 = finalMatch?.jugador1 || st1[0]?.name || 'Por definir';
+        const fJ2 = finalMatch?.jugador2 || st1[1]?.name || 'Por definir';
+        const fScore = finalMatch && cleanKey(finalMatch.estado) === 'jugado' 
+          ? `<div class="mt-2 pt-2 border-t border-slate-700 flex items-center justify-between text-xs"><span class="text-tennis-gold font-bold">🏆 Campeón: ${escapeHtml(finalMatch.ganador)}</span><span class="font-mono bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded">${escapeHtml(finalMatch.resultado)}</span></div>` 
+          : '';
+
+        const pJ1 = promoMatch?.jugador1 || st1[3]?.name || 'Por definir';
+        const pJ2 = promoMatch?.jugador2 || st2[1]?.name || 'Por definir';
+        const pScore = promoMatch && cleanKey(promoMatch.estado) === 'jugado'
+          ? `<div class="mt-2 pt-2 border-t border-slate-700 flex items-center justify-between text-xs"><span class="text-amber-300 font-bold">Ganador: ${escapeHtml(promoMatch.ganador)}</span><span class="font-mono bg-amber-950 text-amber-300 px-2 py-0.5 rounded">${escapeHtml(promoMatch.resultado)}</span></div>`
+          : '';
+
+        container.innerHTML = `
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-emerald-500/30 flex flex-col justify-between">
+            <div><div class="text-xs font-bold uppercase text-emerald-400 mb-2">Por el Título</div><h4 class="text-base font-bold text-white mb-2">Gran Final</h4>
+              <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60 text-sm">
+                <div class="flex justify-between"><span class="text-slate-400">1° A:</span><span class="text-emerald-300 font-bold">${escapeHtml(fJ1)}</span></div>
+                <div class="text-center text-xs text-slate-500 font-bold my-1">VS</div>
+                <div class="flex justify-between"><span class="text-slate-400">2° A:</span><span class="text-emerald-300 font-bold">${escapeHtml(fJ2)}</span></div>
+                ${fScore}
+              </div>
+            </div>
+          </div>
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-amber-500/30 flex flex-col justify-between">
+            <div><div class="text-xs font-bold uppercase text-amber-400 mb-2">Permanencia</div><h4 class="text-base font-bold text-white mb-2">Promoción</h4>
+              <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60 text-sm">
+                <div class="flex justify-between"><span class="text-slate-400">4° A:</span><span class="text-amber-300 font-bold">${escapeHtml(pJ1)}</span></div>
+                <div class="text-center text-xs text-slate-500 font-bold my-1">VS</div>
+                <div class="flex justify-between"><span class="text-slate-400">2° B:</span><span class="text-amber-300 font-bold">${escapeHtml(pJ2)}</span></div>
+                ${pScore}
+              </div>
+            </div>
+          </div>
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-emerald-500/30 flex flex-col justify-between">
+            <div><div class="text-xs font-bold uppercase text-emerald-400 mb-2">Ascenso</div><h4 class="text-base font-bold text-white mb-2">Ascenso Directo</h4>
+              <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60 text-center"><span class="text-xs text-slate-400 block">1° Categoría B</span><span class="text-emerald-300 font-bold block mt-1">${escapeHtml(st2[0]?.name || 'Por definir')}</span></div>
+            </div>
+          </div>
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-rose-500/30 flex flex-col justify-between">
+            <div><div class="text-xs font-bold uppercase text-rose-400 mb-2">Descenso</div><h4 class="text-base font-bold text-white mb-2">Descenso Directo</h4>
+              <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60 text-center"><span class="text-xs text-slate-400 block">5° Categoría A</span><span class="text-rose-300 font-bold block mt-1">${escapeHtml(st1[4]?.name || 'Por definir')}</span></div>
+            </div>
+          </div>
+        `;
+      } else {
+        // Formato GRUPOS (Semis + Final con lectura de resultados reales si fueron cargados)
+        const semiMatches = data.matches.filter(m => cleanKey(m.categoria).includes('semi'));
+        const semi1 = semiMatches[0];
+        const semi2 = semiMatches[1];
+        const finalM = data.matches.find(m => cleanKey(m.categoria) === 'final' || cleanKey(m.categoria) === 'gran final');
+
+        const s1J1 = (semi1 && !semi1.jugador1.includes('1°')) ? semi1.jugador1 : (st1[0]?.name || '1° Grupo 1');
+        const s1J2 = (semi1 && !semi1.jugador2.includes('2°')) ? semi1.jugador2 : (st2[1]?.name || '2° Grupo 2');
+        const s1Score = semi1 && cleanKey(semi1.estado) === 'jugado'
+          ? `<div class="mt-2 pt-2 border-t border-slate-700 flex justify-between text-xs"><span class="text-emerald-400 font-bold">Pasa: ${escapeHtml(semi1.ganador)}</span><span class="font-mono text-slate-300">${escapeHtml(semi1.resultado)}</span></div>` : '';
+
+        const s2J1 = (semi2 && !semi2.jugador1.includes('1°')) ? semi2.jugador1 : (st2[0]?.name || '1° Grupo 2');
+        const s2J2 = (semi2 && !semi2.jugador2.includes('2°')) ? semi2.jugador2 : (st1[1]?.name || '2° Grupo 1');
+        const s2Score = semi2 && cleanKey(semi2.estado) === 'jugado'
+          ? `<div class="mt-2 pt-2 border-t border-slate-700 flex justify-between text-xs"><span class="text-emerald-400 font-bold">Pasa: ${escapeHtml(semi2.ganador)}</span><span class="font-mono text-slate-300">${escapeHtml(semi2.resultado)}</span></div>` : '';
+
+        const finJ1 = (finalM && !cleanKey(finalM.jugador1).includes('ganador')) ? finalM.jugador1 : (semi1 && cleanKey(semi1.estado) === 'jugado' ? semi1.ganador : 'Ganador Semi 1');
+        const finJ2 = (finalM && !cleanKey(finalM.jugador2).includes('ganador')) ? finalM.jugador2 : (semi2 && cleanKey(semi2.estado) === 'jugado' ? semi2.ganador : 'Ganador Semi 2');
+        const finScore = finalM && cleanKey(finalM.estado) === 'jugado'
+          ? `<div class="mt-3 pt-3 border-t border-slate-700 flex items-center justify-between text-xs sm:text-sm"><span class="text-tennis-gold font-black">🏆 CAMPEÓN: ${escapeHtml(finalM.ganador)}</span><span class="font-mono bg-tennis-gold/20 text-tennis-gold px-2.5 py-0.5 rounded font-bold">${escapeHtml(finalM.resultado)}</span></div>` : '';
+
+        container.innerHTML = `
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-emerald-500/30 flex flex-col justify-between">
+            <div><div class="text-xs font-bold uppercase text-emerald-400 mb-2">Playoffs</div><h4 class="text-base font-bold text-white mb-2">Semifinal 1</h4>
+              <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60 text-sm">
+                <div class="flex justify-between"><span class="text-slate-400">1° G1:</span><span class="text-emerald-300 font-bold truncate max-w-[120px]">${escapeHtml(s1J1)}</span></div>
+                <div class="text-center text-xs text-slate-500 font-bold my-1">VS</div>
+                <div class="flex justify-between"><span class="text-slate-400">2° G2:</span><span class="text-emerald-300 font-bold truncate max-w-[120px]">${escapeHtml(s1J2)}</span></div>
+                ${s1Score}
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-emerald-500/30 flex flex-col justify-between">
+            <div><div class="text-xs font-bold uppercase text-emerald-400 mb-2">Playoffs</div><h4 class="text-base font-bold text-white mb-2">Semifinal 2</h4>
+              <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/60 text-sm">
+                <div class="flex justify-between"><span class="text-slate-400">1° G2:</span><span class="text-emerald-300 font-bold truncate max-w-[120px]">${escapeHtml(s2J1)}</span></div>
+                <div class="text-center text-xs text-slate-500 font-bold my-1">VS</div>
+                <div class="flex justify-between"><span class="text-slate-400">2° G1:</span><span class="text-emerald-300 font-bold truncate max-w-[120px]">${escapeHtml(s2J2)}</span></div>
+                ${s2Score}
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-tennis-gold/50 lg:col-span-2 flex flex-col justify-between">
+            <div><div class="text-xs font-bold uppercase text-tennis-gold mb-2 flex items-center gap-1">🏆 Definición del Torneo</div><h4 class="text-base font-bold text-white mb-2">Gran Final</h4>
+              <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700/60">
+                <div class="flex items-center justify-between gap-4">
+                  <div class="text-center flex-1">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-widest block mb-1">Finalista 1</span>
+                    <span class="text-white font-bold text-sm sm:text-base">${escapeHtml(finJ1)}</span>
+                  </div>
+                  <div class="text-slate-500 font-black text-lg">VS</div>
+                  <div class="text-center flex-1">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-widest block mb-1">Finalista 2</span>
+                    <span class="text-white font-bold text-sm sm:text-base">${escapeHtml(finJ2)}</span>
+                  </div>
+                </div>
+                ${finScore}
+              </div>
+            </div>
+          </div>
+        `;
+      }
     }
 
-    function clearNotifications() {
-      document.getElementById('notificationArea').innerHTML = '';
+    function renderDynamicRules(format) {
+      const el = document.getElementById('rulesContent');
+      if (format === 'GROUPS') {
+        el.innerHTML = `
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><strong>Formato de Juego:</strong> Al mejor de 3 sets. Si queda 1-1, se define por 3° set o Super Tie Break a 11 puntos.</div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><strong>Fase de Grupos:</strong> 2 grupos (Grupo 1 de 6 jugadores y Grupo 2 de 5 jugadores, todos contra todos). Los primeros 2 de cada zona avanzan a Semifinales.</div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><strong>Cruces de Semifinal:</strong> 1° Grupo 1 vs 2° Grupo 2 y 1° Grupo 2 vs 2° Grupo 1.</div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><strong>Desempates:</strong> Igualdad de puntos se define por partido entre sí; luego diferencia de sets.</div>
+        `;
+      } else {
+        el.innerHTML = `
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><strong>Formato de Juego:</strong> Al mejor de 3 sets. Si queda 1-1, se define por 3° set o Super Tie Break a 11 puntos.</div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><strong>Categoría A:</strong> 1° y 2° juegan la Final. El 4° juega Promoción y el 5° desciende.</div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><strong>Categoría B:</strong> El 1° asciende directo. El 2° juega la Promoción contra el 4° de la A.</div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><strong>Desempates:</strong> Igualdad de puntos se define por partido entre sí; luego diferencia de sets.</div>
+        `;
+      }
     }
 
+    function cleanString(val) { return val == null ? '' : String(val).trim(); }
+    function cleanKey(val) { return cleanString(val).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
     function escapeHtml(text) {
       if (!text) return '';
-      return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+      return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
   </script>
 </body>
